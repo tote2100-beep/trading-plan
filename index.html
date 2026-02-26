@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>📌 Turki Trading Plan – الالتزام الذكي التراكمي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root{--primary:#1e88e5;--primary-light:#64b5f6;--success:#4caf50;--danger:#f44336;--warning:#ff9800;--dark-bg:#0d1117;--darker-bg:#090c10;--card-bg:#161b22;--card-hover:#1d242e;--card-border:#30363d;--text:#f0f6fc;--text-secondary:#8b949e;--text-muted:#6e7681;--gradient-primary:linear-gradient(135deg,#1e88e5 0%,#0d47a1 100%);--gradient-success:linear-gradient(135deg,#4caf50 0%,#2e7d32 100%);--gradient-danger:linear-gradient(135deg,#f44336 0%,#c62828 100%);--shadow:0 8px 24px rgba(0,0,0,0.4)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI','Noto Sans Arabic',Tahoma,sans-serif;background:var(--dark-bg);color:var(--text);padding:15px;max-width:1200px;margin:0 auto;line-height:1.6}
+        .header{text-align:center;margin-bottom:25px;padding:20px;background:var(--gradient-primary);border-radius:12px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+        .header::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--success) 0%,var(--primary) 50%,var(--warning) 100%)}
+        .header h1{color:white;font-size:1.8rem;margin-bottom:8px}
+        .header p{color:rgba(255,255,255,0.9);font-size:1rem}
+        .fade-container-wrapper{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+        .fade-container{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;position:relative;height:60px;overflow:hidden;box-shadow:var(--shadow)}
+        .fade-text{position:absolute;width:100%;text-align:center;top:50%;transform:translateY(-50%);opacity:0;transition:all 1s ease;font-size:1rem;font-weight:600;padding:0 20px}
+        .plan-text-container{background:linear-gradient(135deg,rgba(30,136,229,0.1) 0%,rgba(30,136,229,0.05) 100%);border-right:4px solid var(--primary)}
+        .motivation-text-container{background:linear-gradient(135deg,rgba(76,175,80,0.1) 0%,rgba(76,175,80,0.05) 100%);border-right:4px solid var(--success)}
+        .fade-text.active{opacity:1;animation:slideIn 0.8s ease}
+        .fade-text.exiting{animation:slideOut 0.8s ease}
+        @keyframes slideIn{from{opacity:0;transform:translateX(50px) translateY(-50%)}to{opacity:1;transform:translateX(0) translateY(-50%)}}
+        @keyframes slideOut{from{opacity:1;transform:translateX(0) translateY(-50%)}to{opacity:0;transform:translateX(-50px) translateY(-50%)}}
+        .plan-text{color:var(--primary-light)}
+        .motivation-text{color:var(--success)}
+        .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px}
+        @media(max-width:768px){.cards-grid{grid-template-columns:1fr}}
+        .card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:15px}
+        .card-header{display:flex;justify-content:space-between;align-items:center;padding:15px;cursor:pointer;background:linear-gradient(135deg,rgba(30,136,229,0.1) 0%,transparent 100%);border-bottom:1px solid var(--card-border)}
+        .card-header h3{color:var(--text);font-size:1.1rem;display:flex;align-items:center;gap:8px}
+        .toggle-btn{background:none;border:1px solid var(--card-border);color:var(--primary);cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease}
+        .toggle-btn:hover{background:var(--primary);color:white}
+        .card-content{max-height:0;overflow:hidden;transition:max-height 0.5s ease,padding 0.3s ease;padding:0 15px}
+        .card-content.show{max-height:2000px;padding:15px}
+        .capital-main-display{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:25px;padding:25px;background:linear-gradient(135deg,rgba(30,136,229,0.15) 0%,rgba(30,136,229,0.05) 100%);border-radius:12px;border:1px solid rgba(30,136,229,0.3)}
+        .capital-icon{width:70px;height:70px;background:var(--gradient-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 15px rgba(30,136,229,0.4)}
+        .capital-info{text-align:center}
+        .capital-label{color:var(--text-secondary);font-size:0.9rem;margin-bottom:5px}
+        .capital-value-display{font-size:2.5rem;font-weight:700;color:var(--primary-light);text-shadow:0 0 20px rgba(30,136,229,0.3)}
+        .capital-edit-section{display:grid;grid-template-columns:1fr auto;gap:15px;align-items:end;margin-bottom:20px}
+        .capital-input-wrapper label{display:block;color:var(--text-secondary);font-size:0.85rem;margin-bottom:8px}
+        .capital-input-container{position:relative;display:flex;align-items:center}
+        .capital-input-container .currency-symbol{position:absolute;right:15px;color:var(--text-muted);font-size:1.1rem;font-weight:600}
+        .capital-input{width:100%;padding:14px 40px 14px 15px;background:var(--darker-bg);border:2px solid var(--card-border);border-radius:10px;color:var(--text);font-size:1.2rem;font-weight:600;transition:all 0.3s ease}
+        .capital-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(30,136,229,0.15)}
+        .capital-save-btn{padding:14px 25px;background:var(--gradient-primary);border:none;border-radius:10px;color:white;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:8px}
+        .capital-save-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,136,229,0.4)}
+        .contracts-status-card{background:linear-gradient(135deg,rgba(76,175,80,0.1) 0%,rgba(76,175,80,0.05) 100%);border:1px solid rgba(76,175,80,0.3);border-radius:10px;padding:15px 20px;display:flex;align-items:center;justify-content:space-between}
+        .contracts-info{display:flex;align-items:center;gap:12px}
+        .contracts-icon{width:45px;height:45px;background:var(--gradient-success);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+        .contracts-text .contracts-label{color:var(--text-secondary);font-size:0.8rem}
+        .contracts-text .contracts-value{font-size:1.3rem;font-weight:700;color:var(--success)}
+        .contracts-badge{padding:8px 16px;background:var(--gradient-success);border-radius:20px;color:white;font-weight:600;font-size:0.9rem}
+        .contracts-badge.warning{background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%)}
+        .commission-info-card{background:linear-gradient(135deg,rgba(255,152,0,0.1) 0%,rgba(255,152,0,0.05) 100%);border:1px solid rgba(255,152,0,0.3);border-radius:10px;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;margin-top:12px}
+        .commission-info{display:flex;align-items:center;gap:12px}
+        .commission-icon{width:45px;height:45px;background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+        .commission-text .commission-label{color:var(--text-secondary);font-size:0.8rem}
+        .commission-text .commission-value{font-size:1.1rem;font-weight:700;color:var(--warning)}
+        .commission-detail{color:var(--text-muted);font-size:0.8rem;text-align:left}
+        .current-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        @media(max-width:480px){.current-stats-grid{grid-template-columns:1fr}}
+        .current-stat-card{background:rgba(13,17,23,0.5);border:1px solid var(--card-border);border-radius:8px;padding:15px;text-align:center;transition:all 0.3s ease}
+        .current-stat-card:hover{transform:translateY(-3px);border-color:var(--primary)}
+        .current-stat-value{font-size:1.8rem;font-weight:700;margin:8px 0}
+        .current-stat-label{color:var(--text-secondary);font-size:0.9rem}
+        .stat-primary .current-stat-value{color:var(--primary)}
+        .stat-success .current-stat-value{color:var(--success)}
+        .stat-warning .current-stat-value{color:var(--warning)}
+        .performance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
+        .perf-card{background:linear-gradient(135deg,rgba(30,136,229,0.08) 0%,rgba(13,17,23,0.5) 100%);border:1px solid var(--card-border);border-radius:12px;padding:20px;transition:all 0.3s ease}
+        .perf-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
+        .perf-card-header{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid var(--card-border)}
+        .perf-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+        .perf-card-icon.profit{background:linear-gradient(135deg,rgba(76,175,80,0.2) 0%,rgba(76,175,80,0.1) 100%)}
+        .perf-card-icon.trade{background:linear-gradient(135deg,rgba(30,136,229,0.2) 0%,rgba(30,136,229,0.1) 100%)}
+        .perf-card-icon.call{background:linear-gradient(135deg,rgba(0,188,212,0.2) 0%,rgba(0,188,212,0.1) 100%)}
+        .perf-card-icon.put{background:linear-gradient(135deg,rgba(156,39,176,0.2) 0%,rgba(156,39,176,0.1) 100%)}
+        .perf-card-icon.commission{background:linear-gradient(135deg,rgba(255,152,0,0.2) 0%,rgba(255,152,0,0.1) 100%)}
+        .perf-card-title{color:var(--text-secondary);font-size:0.85rem;font-weight:500}
+        .perf-card-values{display:flex;justify-content:space-between;align-items:center;gap:15px}
+        .perf-value-box{text-align:center;flex:1}
+        .perf-value-label{font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase}
+        .perf-value{font-size:1.6rem;font-weight:700}
+        .perf-value.green{color:var(--success)}
+        .perf-value.red{color:var(--danger)}
+        .perf-value.orange{color:var(--warning)}
+        .perf-divider{width:2px;height:40px;background:var(--card-border);border-radius:1px}
+        .single-perf-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-top:15px}
+        @media(max-width:600px){.single-perf-cards{grid-template-columns:1fr}}
+        .single-perf-card{background:linear-gradient(135deg,rgba(30,136,229,0.08) 0%,rgba(13,17,23,0.5) 100%);border:1px solid var(--card-border);border-radius:12px;padding:20px;text-align:center;transition:all 0.3s ease}
+        .single-perf-card:hover{transform:translateY(-3px);border-color:var(--primary)}
+        .single-perf-icon{font-size:1.5rem;margin-bottom:8px}
+        .single-perf-value{font-size:1.8rem;font-weight:700;margin:5px 0}
+        .single-perf-value.net-positive{color:var(--success)}
+        .single-perf-value.net-negative{color:var(--danger)}
+        .single-perf-value.net-zero{color:var(--warning)}
+        .single-perf-value.days{color:var(--primary)}
+        .single-perf-value.commission-total{color:var(--warning)}
+        .single-perf-label{color:var(--text-secondary);font-size:0.85rem}
+        .plan-summary-card{background:linear-gradient(135deg,rgba(30,136,229,0.1) 0%,rgba(30,136,229,0.05) 100%);border:1px solid var(--primary);border-radius:8px;padding:15px;font-size:0.95rem}
+        .plan-summary-points{list-style:none;padding:0;margin:10px 0 0 0}
+        .plan-summary-points li{margin-bottom:8px;padding-right:24px;position:relative}
+        .plan-summary-points li:before{content:"•";color:var(--primary);font-size:1.5rem;position:absolute;right:0;top:-4px}
+        .plan-article{color:var(--text-secondary);line-height:1.8;font-size:0.95rem}
+        .plan-article-section{margin-bottom:20px;padding-right:15px;border-right:2px solid var(--primary)}
+        .plan-article-section h4{color:var(--text);margin-bottom:10px;font-size:1.1rem}
+        .plan-article-section ul{list-style:none;padding-right:20px}
+        .plan-article-section li{margin-bottom:8px;padding-right:20px;position:relative}
+        .plan-article-section li:before{content:"•";color:var(--primary);font-size:1.2rem;position:absolute;right:0}
+        .plan-article-section li strong{color:var(--text)}
+        .empty-trades-state{text-align:center;padding:50px 20px;background:linear-gradient(135deg,rgba(30,136,229,0.05) 0%,rgba(30,136,229,0.02) 100%);border-radius:12px;border:2px dashed var(--card-border)}
+        .empty-trades-icon{width:100px;height:100px;margin:0 auto 20px;background:linear-gradient(135deg,rgba(30,136,229,0.2) 0%,rgba(30,136,229,0.1) 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3rem;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        .empty-trades-title{font-size:1.4rem;margin-bottom:10px;font-weight:600}
+        .empty-trades-subtitle{color:var(--text-secondary);font-size:1rem;margin-bottom:25px;max-width:400px;margin-left:auto;margin-right:auto}
+        .empty-trades-btn{padding:15px 35px;background:var(--gradient-success);border:none;border-radius:10px;color:white;font-size:1.1rem;font-weight:600;cursor:pointer;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:10px}
+        .empty-trades-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(76,175,80,0.4)}
+        .empty-trades-tips{margin-top:30px;padding-top:25px;border-top:1px solid var(--card-border)}
+        .empty-trades-tips h4{color:var(--text-secondary);font-size:0.9rem;margin-bottom:15px}
+        .tips-list{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+        .tip-item{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.85rem}
+        .tip-item span{font-size:1.2rem}
+        .trades-header-info{display:flex;align-items:center;gap:10px}
+        .trades-count-badge{background:var(--gradient-primary);color:white;padding:4px 12px;border-radius:15px;font-size:0.8rem;font-weight:600}
+        .table-container{overflow-x:auto;margin:15px 0;border-radius:6px;border:1px solid var(--card-border)}
+        .trade-table{width:100%;border-collapse:collapse;min-width:950px}
+        .trade-table th{background:linear-gradient(135deg,var(--card-bg) 0%,var(--darker-bg) 100%);padding:12px 8px;text-align:center;border-bottom:2px solid var(--card-border);font-weight:600;font-size:0.85rem}
+        .trade-table td{padding:10px 6px;text-align:center;border-bottom:1px solid var(--card-border)}
+        .trade-table tbody tr{background:var(--card-bg);transition:all 0.3s ease}
+        .trade-table tbody tr:hover{background:var(--card-hover)}
+        .btn{padding:10px 20px;border:none;border-radius:6px;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:6px}
+        .btn-primary{background:var(--gradient-primary);color:white}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(30,136,229,0.4)}
+        .btn-success{background:var(--gradient-success);color:white}
+        .btn-success:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(76,175,80,0.4)}
+        .btn-danger{background:var(--gradient-danger);color:white}
+        .btn-danger:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(244,67,54,0.4)}
+        .table-controls{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+        .input-field{width:100%;padding:8px;background:rgba(13,17,23,0.5);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:0.9rem;transition:all 0.3s ease}
+        .input-field:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,136,229,0.2)}
+        .input-field.error{border-color:var(--danger);background:rgba(244,67,54,0.1)}
+        input[type="date"]{color-scheme:dark}
+        input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+        .small-input{width:80px;padding:8px 4px;text-align:center;font-weight:600}
+        .type-call{color:var(--success);font-weight:bold}
+        .type-put{color:var(--danger);font-weight:bold}
+        .result-success{color:var(--success);font-weight:bold}
+        .result-fail{color:var(--danger);font-weight:bold}
+        .commission-cell{color:var(--warning);font-size:0.8rem;font-weight:600}
+        .net-profit-cell{font-weight:bold}
+        .message{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100%);padding:12px 20px;border-radius:8px;z-index:10000;font-weight:600;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;opacity:0}
+        .message.show{animation:msgIn 0.5s ease forwards}
+        .message.hide{animation:msgOut 0.5s ease forwards}
+        @keyframes msgIn{from{opacity:0;transform:translateX(-50%) translateY(-100%)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        @keyframes msgOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-100%)}}
+        .message-success{background:linear-gradient(135deg,rgba(76,175,80,0.95) 0%,rgba(56,142,60,0.95) 100%);color:white}
+        .message-warning{background:linear-gradient(135deg,rgba(255,152,0,0.95) 0%,rgba(245,124,0,0.95) 100%);color:white}
+        .message-error{background:linear-gradient(135deg,rgba(244,67,54,0.95) 0%,rgba(198,40,40,0.95) 100%);color:white}
+        .chart-container{background:linear-gradient(135deg,rgba(30,136,229,0.08) 0%,rgba(13,17,23,0.5) 100%);border:1px solid var(--card-border);border-radius:12px;padding:20px}
+        .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid var(--card-border)}
+        .chart-title{color:var(--text);font-size:1.1rem;font-weight:600;display:flex;align-items:center;gap:10px}
+        .chart-legend{display:flex;gap:15px}
+        .legend-item{display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-secondary)}
+        .legend-dot{width:10px;height:10px;border-radius:50%}
+        .legend-dot.profit{background:var(--success)}
+        .legend-dot.loss{background:var(--danger)}
+        .legend-dot.start{background:var(--primary)}
+        .chart-wrapper{position:relative;height:350px;width:100%}
+        .chart-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid var(--card-border)}
+        .chart-stat{text-align:center;padding:10px;background:rgba(13,17,23,0.3);border-radius:8px}
+        .chart-stat-value{font-size:1.1rem;font-weight:700;color:var(--primary)}
+        .chart-stat-label{font-size:0.7rem;color:var(--text-muted);margin-top:2px}
+        .no-data-message{text-align:center;color:var(--text-secondary);padding:60px 20px;font-size:1rem}
+        .no-data-message span{font-size:3rem;display:block;margin-bottom:15px}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📌 Turki Trading Plan – الالتزام الذكي التراكمي</h1>
+        <p>نظام تداول ذكي يحسب العقود تلقائياً بناءً على الرصيد الحالي الفعلي</p>
+    </div>
+    <div class="fade-container-wrapper">
+        <div class="fade-container plan-text-container"><div class="fade-text plan-text" id="planText"></div></div>
+        <div class="fade-container motivation-text-container"><div class="fade-text motivation-text" id="motivationText"></div></div>
+    </div>
+    <div class="cards-grid">
+        <div class="card">
+            <div class="card-header" onclick="toggleCard('capitalCard')">
+                <h3>💰 رأس المال</h3>
+                <button class="toggle-btn">▼</button>
+            </div>
+            <div class="card-content" id="capitalCard">
+                <div class="capital-main-display">
+                    <div class="capital-icon">💵</div>
+                    <div class="capital-info">
+                        <div class="capital-label">رأس المال الأساسي</div>
+                        <div class="capital-value-display" id="capitalDisplay">$430</div>
+                    </div>
+                </div>
+                <div class="capital-edit-section">
+                    <div class="capital-input-wrapper">
+                        <label>تعديل رأس المال</label>
+                        <div class="capital-input-container">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="capital" class="capital-input" value="430" min="0">
+                        </div>
+                    </div>
+                    <button class="capital-save-btn" onclick="updateCapital()"><span>💾</span> حفظ</button>
+                </div>
+                <div class="contracts-status-card">
+                    <div class="contracts-info">
+                        <div class="contracts-icon">📊</div>
+                        <div class="contracts-text">
+                            <div class="contracts-label">العقود المسموحة حالياً</div>
+                            <div class="contracts-value" id="contractsValue">1 عقد</div>
+                        </div>
+                    </div>
+                    <div class="contracts-badge" id="contractsBadge">✅ جاهز</div>
+                </div>
+                <div class="commission-info-card">
+                    <div class="commission-info">
+                        <div class="commission-icon">💸</div>
+                        <div class="commission-text">
+                            <div class="commission-label">العمولة لكل صفقة</div>
+                            <div class="commission-value" id="commissionTotalDisplay">$4.58</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <div style="text-align:center;">
+                            <div style="color:var(--text-muted);font-size:0.7rem;margin-bottom:4px;">شراء</div>
+                            <input type="number" id="commissionBuy" value="2.29" step="0.01" min="0" onchange="updateCommission()" class="input-field" style="width:70px;padding:6px;text-align:center;font-weight:600;font-size:0.9rem;">
+                        </div>
+                        <div style="color:var(--text-muted);font-size:1.2rem;margin-top:14px;">+</div>
+                        <div style="text-align:center;">
+                            <div style="color:var(--text-muted);font-size:0.7rem;margin-bottom:4px;">بيع</div>
+                            <input type="number" id="commissionSell" value="2.29" step="0.01" min="0" onchange="updateCommission()" class="input-field" style="width:70px;padding:6px;text-align:center;font-weight:600;font-size:0.9rem;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header" onclick="toggleCard('planSummaryCard')">
+                <h3>📋 ملخص الخطة</h3>
+                <button class="toggle-btn">▼</button>
+            </div>
+            <div class="card-content" id="planSummaryCard">
+                <div class="plan-summary-card">
+                    يتم التداول على SPX فقط بعدد عقود محسوب بالرصيد، بهدف ثابت 50$ لكل عقد، مع وقف خسارة صارم.
+                    <ul class="plan-summary-points">
+                        <li>🎯 SPX فقط - هدف 50$ لكل عقد</li>
+                        <li>🛡️ وقف الخسارة عند أول ضعف واضح</li>
+                        <li>📈 رفع الهدف استثناء بشروط واضحة</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" onclick="toggleCard('currentStatsCard')">
+            <h3>📊 الإحصائيات الحالية</h3>
+            <button class="toggle-btn">▼</button>
+        </div>
+        <div class="card-content show" id="currentStatsCard">
+            <div class="current-stats-grid">
+                <div class="current-stat-card stat-primary"><div class="current-stat-label">رأس المال الأساسي</div><div class="current-stat-value" id="baseCapital">$430</div></div>
+                <div class="current-stat-card stat-primary"><div class="current-stat-label">الرصيد الحالي</div><div class="current-stat-value" id="currentBalance">$430</div></div>
+                <div class="current-stat-card stat-warning"><div class="current-stat-label">نسبة الربح/الخسارة</div><div class="current-stat-value" id="profitLossPercentage">0%</div></div>
+                <div class="current-stat-card stat-primary"><div class="current-stat-label">العقود المسموحة</div><div class="current-stat-value" id="allowedContracts">1</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" onclick="toggleCard('performanceStatsCard')">
+            <h3>📈 أداء التداول</h3>
+            <button class="toggle-btn">▼</button>
+        </div>
+        <div class="card-content" id="performanceStatsCard">
+            <div class="performance-grid">
+                <div class="perf-card">
+                    <div class="perf-card-header"><div class="perf-card-icon profit">💰</div><div class="perf-card-title">إجمالي الربح / الخسارة</div></div>
+                    <div class="perf-card-values">
+                        <div class="perf-value-box"><div class="perf-value-label">ربح</div><div class="perf-value green" id="totalProfit">$0</div></div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-value-box"><div class="perf-value-label">خسارة</div><div class="perf-value red" id="totalLoss">$0</div></div>
+                    </div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-card-header"><div class="perf-card-icon commission">💸</div><div class="perf-card-title">إجمالي العمولات</div></div>
+                    <div class="perf-card-values">
+                        <div class="perf-value-box"><div class="perf-value-label">الصفقات</div><div class="perf-value orange" id="completedTradesCount">0</div></div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-value-box"><div class="perf-value-label">إجمالي العمولات</div><div class="perf-value orange" id="totalCommission">$0</div></div>
+                    </div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-card-header"><div class="perf-card-icon trade">📊</div><div class="perf-card-title">الصفقات الناجحة / الخاسرة</div></div>
+                    <div class="perf-card-values">
+                        <div class="perf-value-box"><div class="perf-value-label">ناجحة</div><div class="perf-value green" id="successCount">0</div></div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-value-box"><div class="perf-value-label">خاسرة</div><div class="perf-value red" id="lossCount">0</div></div>
+                    </div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-card-header"><div class="perf-card-icon call">📈</div><div class="perf-card-title">Call ناجحة / خاسرة</div></div>
+                    <div class="perf-card-values">
+                        <div class="perf-value-box"><div class="perf-value-label">ناجحة</div><div class="perf-value green" id="callSuccessCount">0</div></div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-value-box"><div class="perf-value-label">خاسرة</div><div class="perf-value red" id="callLossCount">0</div></div>
+                    </div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-card-header"><div class="perf-card-icon put">📉</div><div class="perf-card-title">Put ناجحة / خاسرة</div></div>
+                    <div class="perf-card-values">
+                        <div class="perf-value-box"><div class="perf-value-label">ناجحة</div><div class="perf-value green" id="putSuccessCount">0</div></div>
+                        <div class="perf-divider"></div>
+                        <div class="perf-value-box"><div class="perf-value-label">خاسرة</div><div class="perf-value red" id="putLossCount">0</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="single-perf-cards">
+                <div class="single-perf-card"><div class="single-perf-icon">💵</div><div class="single-perf-value net-zero" id="netProfitLoss">$0</div><div class="single-perf-label">صافي الربح / الخسارة</div></div>
+                <div class="single-perf-card"><div class="single-perf-icon">💸</div><div class="single-perf-value commission-total" id="totalCommissionDisplay">$0</div><div class="single-perf-label">إجمالي العمولات المدفوعة</div></div>
+                <div class="single-perf-card"><div class="single-perf-icon">📅</div><div class="single-perf-value days" id="tradingDays">0</div><div class="single-perf-label">أيام التداول</div></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" onclick="toggleCard('detailedPlanCard')">
+            <h3>📋 خطة التداول التفصيلية</h3>
+            <button class="toggle-btn">▼</button>
+        </div>
+        <div class="card-content" id="detailedPlanCard">
+            <div class="plan-article">
+                <div class="plan-article-section"><h4>📊 الأدوات والالتزام</h4><ul><li>التداول على عقود <strong>SPX Options</strong> فقط</li><li>الالتزام بـ <strong>صفقات واضحة</strong>، دون استعجال</li><li>عدد الصفقات اليومي من <strong>1 إلى 3</strong> صفقات</li><li>لا يوجد تداول انتقامي</li></ul></div>
+                <div class="plan-article-section"><h4>🔢 إدارة العقود</h4><ul><li>البداية بأقل عدد عقود تسمح به الخطة</li><li>المعادلة: <strong>الرصيد الحالي ÷ 400</strong></li><li>لا يتم زيادة العقود يدوياً أو بدافع نفسي</li></ul></div>
+                <div class="plan-article-section"><h4>🎯 الأهداف</h4><ul><li>الهدف الأساسي <strong>50$</strong> لكل عقد</li><li>مسموح ترك عقد واحد كـ Runner</li><li>لا يتم تحريك الهدف بدافع الطمع</li></ul></div>
+                <div class="plan-article-section"><h4>🛡️ وقف الخسارة</h4><ul><li>الخروج عند أول ضعف واضح</li><li>بحد أقصى <strong>25%</strong> من قيمة العقد</li></ul></div>
+                <div class="plan-article-section"><h4>💸 العمولات</h4><ul><li>عمولة شراء + بيع لكل صفقة (تُخصم تلقائياً)</li><li>يمكن تعديل قيمة العمولة من قسم رأس المال</li></ul></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" onclick="toggleCard('tradesCard')">
+            <div class="trades-header-info"><h3>📝 سجل الصفقات</h3><span class="trades-count-badge" id="tradesCountBadge">0 صفقة</span></div>
+            <button class="toggle-btn">▼</button>
+        </div>
+        <div class="card-content" id="tradesCard">
+            <div class="empty-trades-state" id="emptyTradesState">
+                <div class="empty-trades-icon">📈</div>
+                <h3 class="empty-trades-title">ابدأ رحلة التداول!</h3>
+                <p class="empty-trades-subtitle">لم تقم بإضافة أي صفقات بعد. أضف صفقتك الأولى وابدأ بتتبع أدائك.</p>
+                <button class="empty-trades-btn" onclick="addTrade()"><span>🚀</span> أضف صفقتك الأولى</button>
+                <div class="empty-trades-tips"><h4>💡 نصائح سريعة</h4><div class="tips-list"><div class="tip-item"><span>🎯</span> هدف 50$ لكل عقد</div><div class="tip-item"><span>🛡️</span> التزم بوقف الخسارة</div><div class="tip-item"><span>📊</span> سجّل كل صفقة</div></div></div>
+            </div>
+            <div id="tradesTableSection" style="display:none;">
+                <div class="table-controls">
+                    <button class="btn btn-success" onclick="addTrade()">+ إضافة صفقة</button>
+                    <button class="btn btn-primary" onclick="saveAllTrades()">💾 حفظ</button>
+                    <button class="btn btn-danger" onclick="clearAllTrades()">مسح الكل</button>
+                </div>
+                <div class="table-container">
+                    <table class="trade-table" id="tradeTable">
+                        <thead><tr><th>التاريخ</th><th>النوع</th><th>Strike</th><th>العقود</th><th>سعر الدخول</th><th>سعر البيع</th><th>النتيجة</th><th>الربح/الخسارة</th><th>العمولة</th><th>الصافي</th><th>إجراء</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header" onclick="toggleCard('chartsCard')">
+            <h3>📊 منحنى نمو رأس المال</h3>
+            <button class="toggle-btn">▼</button>
+        </div>
+        <div class="card-content" id="chartsCard">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">📈 تطور رأس المال عبر الصفقات</div>
+                    <div class="chart-legend"><div class="legend-item"><div class="legend-dot start"></div> البداية</div><div class="legend-item"><div class="legend-dot profit"></div> ربح</div><div class="legend-item"><div class="legend-dot loss"></div> خسارة</div></div>
+                </div>
+                <div class="chart-wrapper"><canvas id="capitalGrowthChart"></canvas></div>
+                <div class="no-data-message" id="capitalChartNoData" style="display:none;"><span>📊</span>لا توجد بيانات كافية لعرض الرسم البياني<br><small>أضف صفقات لمشاهدة تطور رأس المال</small></div>
+                <div class="chart-stats" id="chartStats" style="display:none;">
+                    <div class="chart-stat"><div class="chart-stat-value" id="chartMinBalance">$0</div><div class="chart-stat-label">أقل رصيد</div></div>
+                    <div class="chart-stat"><div class="chart-stat-value" id="chartMaxBalance">$0</div><div class="chart-stat-label">أعلى رصيد</div></div>
+                    <div class="chart-stat"><div class="chart-stat-value" id="chartAvgBalance">$0</div><div class="chart-stat-label">متوسط الرصيد</div></div>
+                    <div class="chart-stat"><div class="chart-stat-value" id="chartTotalTrades">0</div><div class="chart-stat-label">إجمالي الصفقات</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ═══════════════════════════════════════════════════════
+        // ثوابت التطبيق
+        // ═══════════════════════════════════════════════════════
+        const CONTRACT_DIVISOR = 400;
+        const DEFAULT_CAPITAL = 430;
+        const DEFAULT_COMMISSION_BUY = 2.29;
+        const DEFAULT_COMMISSION_SELL = 2.29;
+        const TARGET_PER_CONTRACT = 50;
+        const STORAGE_KEY = 'turkiTradingData';
+
+        // ═══════════════════════════════════════════════════════
+        // حالة التطبيق
+        // ═══════════════════════════════════════════════════════
+        const App = {
+            data: { capital: DEFAULT_CAPITAL, trades: [], commissionBuy: DEFAULT_COMMISSION_BUY, commissionSell: DEFAULT_COMMISSION_SELL },
+            texts: {
+                plan: [
+                    "📌 خطة التداول: عقود SPX فقط",
+                    "🎯 الهدف الأساسي: 50$ لكل عقد",
+                    "🛡️ وقف الخسارة: نصف قيمة العقد",
+                    "📊 قاعدة الحساب: الرصيد ÷ 400 = عدد العقود",
+                    "📈 تحديث تلقائي للعقود مع كل صفقة"
+                ],
+                motivation: [
+                    "📈 التداول ماراثون طويل - الالتزام هو المفتاح",
+                    "💪 الانضباط النفسي أهم من أي استراتيجية",
+                    "🎯 ركز على العملية وليس النتيجة",
+                    "🧠 التحكم في العواطف يميز المحترف",
+                    "⏳ الصبر فضيلة، السوق يكافئ الصبورين"
+                ],
+                planIdx: 0,
+                motivationIdx: 0
+            },
+            timers: { plan: null, motivation: null },
+            charts: { capital: null },
+            cache: null,
+            needsUpdate: true
+        };
+
+        // ═══════════════════════════════════════════════════════
+        // التهيئة
+        // ═══════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateDisplay();
+            startFadeEffects();
+            initCharts();
+            window.addEventListener('beforeunload', cleanup);
+        });
+
+        function cleanup() {
+            clearInterval(App.timers.plan);
+            clearInterval(App.timers.motivation);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // تحميل وحفظ البيانات
+        // ═══════════════════════════════════════════════════════
+        function loadData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return;
+                const d = JSON.parse(saved);
+                App.data.capital = Math.max(0, Number(d.capital) || DEFAULT_CAPITAL);
+                App.data.commissionBuy = d.commissionBuy !== undefined ? Number(d.commissionBuy) : DEFAULT_COMMISSION_BUY;
+                App.data.commissionSell = d.commissionSell !== undefined ? Number(d.commissionSell) : DEFAULT_COMMISSION_SELL;
+                App.data.trades = (d.trades || []).map(validateTrade).filter(Boolean);
+            } catch (e) {
+                console.error('خطأ في تحميل البيانات:', e);
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(App.data));
+            } catch (e) {
+                console.error('خطأ في حفظ البيانات:', e);
+                showMessage('خطأ في حفظ البيانات', 'error');
+            }
+            App.needsUpdate = true;
+        }
+
+        function validateTrade(t) {
+            if (!t) return null;
+            return {
+                id: t.id || Date.now(),
+                date: t.date || new Date().toISOString().split('T')[0],
+                type: ['Call', 'Put', ''].includes(t.type) ? t.type : '',
+                strike: String(t.strike || ''),
+                contracts: Math.max(1, parseInt(t.contracts) || 1),
+                entryPrice: t.entryPrice !== undefined ? String(t.entryPrice) : '',
+                exitPrice: t.exitPrice !== undefined ? String(t.exitPrice) : '',
+                result: ['ناجحة', 'خاسرة', ''].includes(t.result) ? t.result : '',
+                profitValue: t.profitValue !== undefined ? String(t.profitValue) : ''
+            };
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // حساب العمولة والصافي لصفقة واحدة
+        // ═══════════════════════════════════════════════════════
+        function calcTradeCommission(trade) {
+            // العمولة تُحسب فقط للصفقات المكتملة (لها نتيجة)
+            if (!trade.result) return { commission: 0, netProfit: 0, grossProfit: 0 };
+
+            const grossProfit = parseFloat(trade.profitValue) || 0;
+            const commission = App.data.commissionBuy + App.data.commissionSell;
+            let netProfit;
+
+            if (trade.result === 'ناجحة') {
+                netProfit = grossProfit - commission;
+            } else {
+                netProfit = -(grossProfit + commission);
+            }
+
+            return { commission, netProfit, grossProfit };
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // حساب الإحصائيات
+        // ═══════════════════════════════════════════════════════
+        function calcStats() {
+            if (!App.needsUpdate && App.cache) return App.cache;
+
+            const { capital, trades } = App.data;
+            const s = {
+                totalProfit: 0,        // إجمالي الربح بعد العمولة
+                totalLoss: 0,          // إجمالي الخسارة بعد العمولة
+                totalCommission: 0,    // إجمالي العمولات
+                completedTrades: 0,    // الصفقات
+                successCount: 0,
+                lossCount: 0,
+                callSuccessCount: 0,
+                callLossCount: 0,
+                putSuccessCount: 0,
+                putLossCount: 0,
+                tradingDays: new Set(),
+                balanceHistory: [{ label: 'البداية', balance: capital, type: 'start' }]
+            };
+
+            let balance = capital;
+
+            // ترتيب من الأقدم للأحدث
+            const sortedTrades = [...trades].sort((a, b) => {
+                const dateA = new Date(a.date).getTime();
+                const dateB = new Date(b.date).getTime();
+                if (dateA !== dateB) return dateA - dateB;
+                return a.id - b.id;
+            });
+
+            sortedTrades.forEach((t, idx) => {
+                const contracts = parseInt(t.contracts) || 1;
+                if (t.date) s.tradingDays.add(t.date);
+
+                if (!t.result) return; // تخطي الصفقات غير المكتملة
+
+                const { commission, netProfit, grossProfit } = calcTradeCommission(t);
+                s.totalCommission += commission;
+                s.completedTrades++;
+
+                if (t.result === 'ناجحة') {
+                    s.totalProfit += Math.round(netProfit * 100) / 100; // ربح بعد العمولة
+                    s.successCount++;
+                    balance += netProfit;
+                    if (t.type === 'Call') s.callSuccessCount++;
+                    else if (t.type === 'Put') s.putSuccessCount++;
+                } else if (t.result === 'خاسرة') {
+                    s.totalLoss += Math.round(Math.abs(netProfit) * 100) / 100; // خسارة بعد العمولة
+                    s.lossCount++;
+                    balance += netProfit;
+                    if (t.type === 'Call') s.callLossCount++;
+                    else if (t.type === 'Put') s.putLossCount++;
+                }
+
+                s.balanceHistory.push({
+                    label: 'صفقة ' + (idx + 1),
+                    balance: Math.round(balance * 100) / 100,
+                    type: t.result === 'ناجحة' ? 'profit' : 'loss',
+                    date: t.date
+                });
+            });
+
+            // الصافي بعد العمولات (totalProfit و totalLoss تحتوي القيم بعد العمولة)
+            s.currentBalance = Math.round(balance * 100) / 100;
+            s.netProfitLoss = Math.round((s.totalProfit - s.totalLoss) * 100) / 100;
+            s.profitLossPercentage = capital > 0 ? Math.round(((s.currentBalance - capital) / capital) * 1000) / 10 : 0;
+            s.allowedContracts = Math.max(1, Math.floor(s.currentBalance / CONTRACT_DIVISOR));
+            s.tradingDaysCount = s.tradingDays.size;
+            s.totalCommission = Math.round(s.totalCommission * 100) / 100;
+
+            const balances = s.balanceHistory.map(h => h.balance);
+            s.minBalance = Math.min(...balances);
+            s.maxBalance = Math.max(...balances);
+            s.avgBalance = Math.round(balances.reduce((a, b) => a + b, 0) / balances.length);
+
+            App.cache = s;
+            App.needsUpdate = false;
+            return s;
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // تحديث العرض
+        // ═══════════════════════════════════════════════════════
+        function updateDisplay() {
+            const s = calcStats();
+
+            // رأس المال
+            document.getElementById('capital').value = App.data.capital;
+            document.getElementById('capitalDisplay').textContent = '$' + App.data.capital;
+            document.getElementById('contractsValue').textContent = s.allowedContracts + ' عقد';
+
+            // العمولة
+            document.getElementById('commissionBuy').value = App.data.commissionBuy;
+            document.getElementById('commissionSell').value = App.data.commissionSell;
+            const totalCommPerTrade = Math.round((App.data.commissionBuy + App.data.commissionSell) * 100) / 100;
+            document.getElementById('commissionTotalDisplay').textContent = '$' + totalCommPerTrade;
+
+            const badge = document.getElementById('contractsBadge');
+            badge.textContent = s.allowedContracts > 1 ? '✅ ممتاز' : '⚠️ الحد الأدنى';
+            badge.className = 'contracts-badge' + (s.allowedContracts <= 1 ? ' warning' : '');
+
+            // الإحصائيات الحالية
+            document.getElementById('baseCapital').textContent = '$' + App.data.capital;
+            document.getElementById('currentBalance').textContent = '$' + s.currentBalance;
+
+            const plEl = document.getElementById('profitLossPercentage');
+            plEl.textContent = s.profitLossPercentage + '%';
+            plEl.style.color = s.profitLossPercentage > 0 ? 'var(--success)' : s.profitLossPercentage < 0 ? 'var(--danger)' : 'var(--warning)';
+
+            document.getElementById('allowedContracts').textContent = s.allowedContracts;
+
+            // أداء التداول
+            document.getElementById('totalProfit').textContent = '$' + Math.round(s.totalProfit * 100) / 100;
+            document.getElementById('totalLoss').textContent = '$' + Math.round(s.totalLoss * 100) / 100;
+            document.getElementById('completedTradesCount').textContent = s.completedTrades;
+            document.getElementById('totalCommission').textContent = '$' + s.totalCommission;
+            document.getElementById('successCount').textContent = s.successCount;
+            document.getElementById('lossCount').textContent = s.lossCount;
+            document.getElementById('callSuccessCount').textContent = s.callSuccessCount;
+            document.getElementById('callLossCount').textContent = s.callLossCount;
+            document.getElementById('putSuccessCount').textContent = s.putSuccessCount;
+            document.getElementById('putLossCount').textContent = s.putLossCount;
+            document.getElementById('tradingDays').textContent = s.tradingDaysCount;
+
+            // صافي الربح بعد العمولات
+            const netEl = document.getElementById('netProfitLoss');
+            netEl.textContent = (s.netProfitLoss >= 0 ? '+' : '') + s.netProfitLoss + '$';
+            netEl.className = 'single-perf-value ' + (s.netProfitLoss > 0 ? 'net-positive' : s.netProfitLoss < 0 ? 'net-negative' : 'net-zero');
+
+            document.getElementById('totalCommissionDisplay').textContent = '$' + s.totalCommission;
+            document.getElementById('tradesCountBadge').textContent = App.data.trades.length + ' صفقة';
+
+            // عرض/إخفاء الجدول
+            const empty = document.getElementById('emptyTradesState');
+            const table = document.getElementById('tradesTableSection');
+            if (App.data.trades.length === 0) {
+                empty.style.display = 'block';
+                table.style.display = 'none';
+            } else {
+                empty.style.display = 'none';
+                table.style.display = 'block';
+            }
+
+            renderTable();
+            updateChart();
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // التفاعل مع الكروت
+        // ═══════════════════════════════════════════════════════
+        function toggleCard(id) {
+            const card = document.getElementById(id);
+            const btn = card.previousElementSibling.querySelector('.toggle-btn');
+            card.classList.toggle('show');
+            btn.textContent = card.classList.contains('show') ? '▲' : '▼';
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // تأثيرات النصوص المتحركة
+        // ═══════════════════════════════════════════════════════
+        function startFadeEffects() {
+            const planEl = document.getElementById('planText');
+            const motEl = document.getElementById('motivationText');
+
+            planEl.textContent = App.texts.plan[0];
+            planEl.classList.add('active');
+            motEl.textContent = App.texts.motivation[0];
+            motEl.classList.add('active');
+
+            function cycleText(el, textsArr, idxKey, interval) {
+                return setInterval(() => {
+                    el.classList.remove('active');
+                    el.classList.add('exiting');
+                    setTimeout(() => {
+                        el.classList.remove('exiting');
+                        App.texts[idxKey] = (App.texts[idxKey] + 1) % textsArr.length;
+                        el.textContent = textsArr[App.texts[idxKey]];
+                        el.classList.add('active');
+                    }, 800);
+                }, interval);
+            }
+
+            App.timers.plan = cycleText(planEl, App.texts.plan, 'planIdx', 5000);
+            App.timers.motivation = cycleText(motEl, App.texts.motivation, 'motivationIdx', 7000);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // إدارة رأس المال
+        // ═══════════════════════════════════════════════════════
+        function updateCapital() {
+            const val = parseFloat(document.getElementById('capital').value);
+            if (isNaN(val) || val < 0) {
+                showMessage('رأس المال يجب أن يكون رقماً موجباً', 'warning');
+                return;
+            }
+            App.data.capital = val;
+            App.needsUpdate = true;
+            saveData();
+            updateDisplay();
+            showMessage('تم تحديث رأس المال');
+        }
+
+        function updateCommission() {
+            const buyVal = parseFloat(document.getElementById('commissionBuy').value);
+            const sellVal = parseFloat(document.getElementById('commissionSell').value);
+            if (isNaN(buyVal) || buyVal < 0 || isNaN(sellVal) || sellVal < 0) {
+                showMessage('قيمة العمولة يجب أن تكون رقماً موجباً', 'warning');
+                return;
+            }
+            App.data.commissionBuy = Math.round(buyVal * 100) / 100;
+            App.data.commissionSell = Math.round(sellVal * 100) / 100;
+            App.needsUpdate = true;
+            saveData();
+            updateDisplay();
+            showMessage('تم تحديث العمولة');
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // إدارة الصفقات
+        // ═══════════════════════════════════════════════════════
+        function addTrade() {
+            App.data.trades.unshift({
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                type: '',
+                strike: '',
+                contracts: 1,
+                entryPrice: '',
+                exitPrice: '',
+                result: '',
+                profitValue: ''
+            });
+            App.needsUpdate = true;
+
+            const card = document.getElementById('tradesCard');
+            if (!card.classList.contains('show')) {
+                card.classList.add('show');
+                card.previousElementSibling.querySelector('.toggle-btn').textContent = '▲';
+            }
+
+            updateDisplay();
+            showMessage('تم إضافة صفقة جديدة');
+        }
+
+        function updateTrade(id, field, value) {
+            const t = App.data.trades.find(x => x.id === id);
+            if (!t) return;
+
+            const s = calcStats();
+
+            // التحقق من سعر الدخول
+            if (field === 'entryPrice') {
+                const entryVal = parseFloat(value) || 0;
+                if (entryVal > s.currentBalance) {
+                    showMessage('سعر الدخول لا يمكن أن يتجاوز الرصيد الحالي ($' + s.currentBalance + ')', 'error');
+                    return;
+                }
+            }
+
+            if (field === 'contracts') {
+                t[field] = Math.max(1, parseInt(value) || 1);
+            } else {
+                t[field] = value;
+            }
+
+            // حساب تلقائي عند تغيير الأسعار
+            if (field === 'exitPrice' || field === 'entryPrice' || field === 'contracts') {
+                const entry = parseFloat(t.entryPrice) || 0;
+                const exit = parseFloat(t.exitPrice) || 0;
+                const contracts = parseInt(t.contracts) || 1;
+
+                if (entry > 0 && exit > 0) {
+                    const diff = (exit - entry) * contracts;
+                    t.profitValue = Math.abs(Math.round(diff * 100) / 100).toString();
+                    t.result = diff >= 0 ? 'ناجحة' : 'خاسرة';
+                }
+            }
+
+            App.needsUpdate = true;
+            updateDisplay();
+        }
+
+        function deleteTrade(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه الصفقة؟')) return;
+            App.data.trades = App.data.trades.filter(t => t.id !== id);
+            App.needsUpdate = true;
+            saveData();
+            updateDisplay();
+            showMessage('تم حذف الصفقة');
+        }
+
+        function saveAllTrades() {
+            saveData();
+            showMessage('تم الحفظ');
+        }
+
+        function clearAllTrades() {
+            if (!confirm('هل أنت متأكد من مسح جميع الصفقات؟')) return;
+            App.data.trades = [];
+            App.needsUpdate = true;
+            saveData();
+            updateDisplay();
+            showMessage('تم مسح جميع الصفقات');
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // عرض الجدول
+        // ═══════════════════════════════════════════════════════
+        function renderTable() {
+            const tbody = document.querySelector('#tradeTable tbody');
+            const s = calcStats();
+            tbody.innerHTML = '';
+
+            App.data.trades.forEach(t => {
+                const row = document.createElement('tr');
+                const typeClass = t.type === 'Call' ? 'type-call' : t.type === 'Put' ? 'type-put' : '';
+                const resultClass = t.result === 'ناجحة' ? 'result-success' : t.result === 'خاسرة' ? 'result-fail' : '';
+                const entryPrice = parseFloat(t.entryPrice) || 0;
+                const targetPrice = entryPrice > 0 ? (entryPrice + TARGET_PER_CONTRACT) : '';
+                const contracts = parseInt(t.contracts) || 1;
+                const isEntryOverBalance = entryPrice > s.currentBalance;
+
+                // حساب العمولة والصافي
+                const { commission, netProfit } = calcTradeCommission(t);
+                const hasResult = !!t.result;
+                const commissionDisplay = hasResult ? '$' + commission.toFixed(2) : '—';
+
+                let netDisplay = '—';
+                let netColor = 'var(--text-muted)';
+                if (hasResult) {
+                    const roundedNet = Math.round(netProfit * 100) / 100;
+                    netDisplay = (roundedNet >= 0 ? '+' : '') + roundedNet + '$';
+                    netColor = roundedNet > 0 ? 'var(--success)' : roundedNet < 0 ? 'var(--danger)' : 'var(--warning)';
+                }
+
+                row.innerHTML = `
+                    <td><input type="date" value="${t.date}" onchange="updateTrade(${t.id},'date',this.value)" class="input-field" style="padding:6px;width:130px;"></td>
+                    <td><select onchange="updateTrade(${t.id},'type',this.value)" class="input-field ${typeClass}" style="padding:6px;width:70px;"><option value="" ${!t.type ? 'selected' : ''}>—</option><option value="Call" ${t.type === 'Call' ? 'selected' : ''}>Call</option><option value="Put" ${t.type === 'Put' ? 'selected' : ''}>Put</option></select></td>
+                    <td><input type="text" value="${t.strike}" onchange="updateTrade(${t.id},'strike',this.value)" placeholder="5050" class="input-field small-input"></td>
+                    <td><select onchange="updateTrade(${t.id},'contracts',this.value)" class="input-field" style="padding:6px;width:55px;">${Array.from({ length: Math.max(s.allowedContracts, contracts) }, (_, i) => `<option value="${i + 1}" ${contracts === i + 1 ? 'selected' : ''}>${i + 1}</option>`).join('')}</select></td>
+                    <td><input type="number" value="${t.entryPrice}" onchange="updateTrade(${t.id},'entryPrice',this.value)" class="input-field small-input ${isEntryOverBalance ? 'error' : ''}" style="${t.entryPrice && !isEntryOverBalance ? 'border-color:var(--primary)' : ''}"></td>
+                    <td><input type="number" value="${t.exitPrice}" onchange="updateTrade(${t.id},'exitPrice',this.value)" placeholder="${targetPrice}" class="input-field small-input" style="${t.exitPrice ? 'border-color:' + (t.result === 'ناجحة' ? 'var(--success)' : 'var(--danger)') : 'color:var(--warning);'}"></td>
+                    <td><span class="${resultClass}">${t.result || '—'}</span></td>
+                    <td style="font-weight:bold;color:${t.result === 'ناجحة' ? 'var(--success)' : t.result === 'خاسرة' ? 'var(--danger)' : 'var(--text-muted)'};">${t.profitValue ? '$' + t.profitValue : '—'}</td>
+                    <td class="commission-cell">${commissionDisplay}</td>
+                    <td class="net-profit-cell" style="color:${netColor};">${netDisplay}</td>
+                    <td><button onclick="deleteTrade(${t.id})" class="btn btn-danger" style="padding:5px 10px;font-size:0.75rem;">حذف</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // الرسم البياني
+        // ═══════════════════════════════════════════════════════
+        function initCharts() {
+            Chart.defaults.font.family = "'Segoe UI','Noto Sans Arabic',sans-serif";
+            Chart.defaults.color = '#8b949e';
+            updateChart();
+        }
+
+        function updateChart() {
+            const s = calcStats();
+            const ctx = document.getElementById('capitalGrowthChart');
+            const noData = document.getElementById('capitalChartNoData');
+            const stats = document.getElementById('chartStats');
+
+            if (s.balanceHistory.length <= 1) {
+                ctx.style.display = 'none';
+                noData.style.display = 'block';
+                stats.style.display = 'none';
+                return;
+            }
+
+            ctx.style.display = 'block';
+            noData.style.display = 'none';
+            stats.style.display = 'grid';
+
+            document.getElementById('chartMinBalance').textContent = '$' + s.minBalance;
+            document.getElementById('chartMaxBalance').textContent = '$' + s.maxBalance;
+            document.getElementById('chartAvgBalance').textContent = '$' + s.avgBalance;
+            document.getElementById('chartTotalTrades').textContent = s.successCount + s.lossCount;
+
+            if (App.charts.capital) App.charts.capital.destroy();
+
+            const labels = s.balanceHistory.map(h => h.label);
+            const data = s.balanceHistory.map(h => h.balance);
+            const colors = s.balanceHistory.map(h =>
+                h.type === 'profit' ? '#4caf50' : h.type === 'loss' ? '#f44336' : '#1e88e5'
+            );
+
+            App.charts.capital = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'رأس المال',
+                        data,
+                        borderColor: '#1e88e5',
+                        backgroundColor: 'rgba(30,136,229,0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        pointBackgroundColor: colors,
+                        pointBorderColor: colors,
+                        pointRadius: 8,
+                        pointHoverRadius: 12,
+                        pointBorderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(22,27,34,0.95)',
+                            titleColor: '#f0f6fc',
+                            bodyColor: '#8b949e',
+                            borderColor: '#30363d',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function (context) {
+                                    const idx = context.dataIndex;
+                                    const item = s.balanceHistory[idx];
+                                    let label = 'الرصيد: $' + item.balance;
+                                    if (item.type === 'profit') label += ' ✅ ربح';
+                                    else if (item.type === 'loss') label += ' ❌ خسارة';
+                                    if (idx > 0) {
+                                        const prev = s.balanceHistory[idx - 1].balance;
+                                        const diff = Math.round((item.balance - prev) * 100) / 100;
+                                        label += ' (العمولة مخصومة)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(48,54,61,0.3)', drawBorder: false },
+                            ticks: { font: { size: 11 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(48,54,61,0.3)', drawBorder: false },
+                            ticks: { callback: v => '$' + v, font: { size: 11 } },
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // رسائل التنبيه
+        // ═══════════════════════════════════════════════════════
+        function showMessage(msg, type = 'success') {
+            // إزالة أي رسائل سابقة
+            document.querySelectorAll('.message').forEach(m => m.remove());
+
+            const el = document.createElement('div');
+            el.className = `message message-${type}`;
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+            el.innerHTML = `${icon}<span>${msg}</span>`;
+            document.body.appendChild(el);
+
+            requestAnimationFrame(() => el.classList.add('show'));
+
+            setTimeout(() => {
+                el.classList.remove('show');
+                el.classList.add('hide');
+                setTimeout(() => el.remove(), 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
