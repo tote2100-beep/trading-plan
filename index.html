@@ -1,637 +1,343 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>📌 سجل الأداء الاحترافي</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary:#0ea5e9;--primary-dark:#0284c7;--primary-glow:rgba(14,165,233,0.15);
-            --success:#22c55e;--success-dark:#16a34a;--success-glow:rgba(34,197,94,0.15);
-            --danger:#ef4444;--danger-dark:#dc2626;--danger-glow:rgba(239,68,68,0.15);
-            --warning:#f59e0b;--warning-glow:rgba(245,158,11,0.15);
-            --purple:#a855f7;
-            --bg-base:#030712;--bg-card:#0f172a;--bg-elevated:#1e293b;
-            --border:#1e293b;--border-hover:#334155;
-            --text:#f1f5f9;--text-dim:#94a3b8;--text-muted:#64748b;
-            --radius:12px;
-        }
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Tajawal',sans-serif;background:var(--bg-base);color:var(--text);min-height:100vh;padding:16px;max-width:900px;margin:0 auto;line-height:1.6}
-
-        .header{text-align:center;padding:28px 20px;margin-bottom:24px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(14,165,233,0.12),rgba(139,92,246,0.08));border:1px solid rgba(14,165,233,0.2);position:relative;overflow:hidden}
-        .header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--success),var(--primary),var(--purple))}
-        .header h1{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-        .header p{color:var(--text-dim);font-size:0.92rem}
-
-        .ticker{display:flex;gap:12px;margin-bottom:24px}
-        .ticker-item{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;height:52px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
-        .ticker-item.plan{border-right:3px solid var(--primary)}
-        .ticker-item.mot{border-right:3px solid var(--success)}
-        .ticker-text{font-size:0.88rem;font-weight:600;opacity:0;transition:opacity 0.6s;position:absolute}
-        .ticker-text.active{opacity:1}
-        .ticker-text.t-plan{color:var(--primary)}
-        .ticker-text.t-mot{color:var(--success)}
-
-        .dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-        .dash-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden}
-        .dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-        .dash-card.c-primary::before{background:var(--primary)}.dash-card.c-success::before{background:var(--success)}.dash-card.c-danger::before{background:var(--danger)}.dash-card.c-warning::before{background:var(--warning)}.dash-card.c-purple::before{background:var(--purple)}
-        .dash-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
-        .dash-icon{font-size:1.3rem;margin-bottom:4px}
-        .dash-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;margin:4px 0}
-        .dash-val.v-primary{color:var(--primary)}.dash-val.v-success{color:var(--success)}.dash-val.v-danger{color:var(--danger)}.dash-val.v-warning{color:var(--warning)}.dash-val.v-purple{color:var(--purple)}
-        .dash-lbl{color:var(--text-muted);font-size:0.75rem;font-weight:500}
-
-        .streak-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-        .streak-label{font-size:0.88rem;font-weight:600;color:var(--text-dim);white-space:nowrap}
-        .streak-dots{display:flex;gap:4px;flex-wrap:wrap;flex:1;justify-content:center}
-        .streak-dot{width:12px;height:12px;border-radius:50%}
-        .streak-dot.win{background:var(--success);box-shadow:0 0 6px rgba(34,197,94,0.4)}
-        .streak-dot.lose{background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,0.4)}
-        .streak-count{font-size:0.8rem;color:var(--text-muted);white-space:nowrap}
-
-        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;overflow:hidden}
-        .card-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;cursor:pointer;background:linear-gradient(135deg,rgba(14,165,233,0.04),transparent);border-bottom:1px solid var(--border);transition:background 0.3s}
-        .card-hd:hover{background:rgba(14,165,233,0.07)}
-        .card-hd h3{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
-        .toggle{width:26px;height:26px;border-radius:50%;background:rgba(14,165,233,0.1);border:1px solid var(--border);color:var(--primary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;transition:all 0.3s}
-        .toggle:hover{background:var(--primary);color:white}
-        .card-bd{max-height:0;overflow:hidden;transition:max-height 0.5s ease,padding 0.3s;padding:0 20px}
-        .card-bd.show{max-height:5000px;padding:20px}
-
-        .add-form{display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:18px;background:linear-gradient(135deg,rgba(14,165,233,0.06),rgba(34,197,94,0.04));border-radius:10px;border:1px solid var(--border)}
-        .add-form .field{flex:1;min-width:130px}
-        .add-form label{display:block;color:var(--text-dim);font-size:0.8rem;margin-bottom:5px;font-weight:500}
-        .add-form input{width:100%;padding:11px 12px;background:var(--bg-base);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;transition:border-color 0.3s}
-        .add-form input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
-        .add-form input::placeholder{color:var(--text-muted);font-weight:400}
-        input[type="date"]{color-scheme:dark}
-        input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
-
-        .btn{padding:10px 18px;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.25s;display:inline-flex;align-items:center;gap:6px}
-        .btn:hover{transform:translateY(-1px)}
-        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white}
-        .btn-primary:hover{box-shadow:0 4px 16px rgba(14,165,233,0.4)}
-        .btn-success{background:linear-gradient(135deg,var(--success),var(--success-dark));color:white}
-        .btn-success:hover{box-shadow:0 4px 16px rgba(34,197,94,0.4)}
-        .btn-danger{background:linear-gradient(135deg,var(--danger),var(--danger-dark));color:white}
-        .btn-danger:hover{box-shadow:0 4px 16px rgba(239,68,68,0.4)}
-        .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-dim)}
-        .btn-outline:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-glow)}
-        .btn-sm{padding:6px 12px;font-size:0.78rem}
-        .btn-xs{padding:4px 8px;font-size:0.72rem}
-
-        .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
-        .log-table{width:100%;border-collapse:collapse;font-size:0.9rem}
-        .log-table th{background:var(--bg-elevated);padding:12px 14px;text-align:center;font-weight:600;font-size:0.82rem;color:var(--text-dim);border-bottom:2px solid var(--border)}
-        .log-table td{padding:11px 14px;text-align:center;border-bottom:1px solid rgba(30,41,59,0.5)}
-        .log-table tbody tr{background:var(--bg-card);transition:background 0.2s}
-        .log-table tbody tr:hover{background:var(--bg-elevated)}
-        .profit-cell{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.95rem}
-        .status-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700}
-        .status-success{background:var(--success-glow);color:var(--success);border:1px solid rgba(34,197,94,0.3)}
-        .status-fail{background:var(--danger-glow);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
-        .date-cell{font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--text-dim)}
-
-        .filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
-        .filter-select{padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:0.85rem;cursor:pointer}
-        .filter-select:focus{outline:none;border-color:var(--primary)}
-
-        .chart-box{background:linear-gradient(135deg,rgba(14,165,233,0.04),transparent);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
-        .chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-        .chart-title{font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:8px}
-        .chart-legend{display:flex;gap:12px}
-        .legend-item{display:flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-muted)}
-        .legend-dot{width:8px;height:8px;border-radius:50%}
-        .chart-area{position:relative;height:300px;width:100%}
-        .chart-footer{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
-        .chart-stat{text-align:center;padding:8px;background:rgba(15,23,42,0.5);border-radius:8px}
-        .chart-stat-val{font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:700;color:var(--primary)}
-        .chart-stat-lbl{font-size:0.68rem;color:var(--text-muted);margin-top:2px}
-        .no-data{text-align:center;color:var(--text-muted);padding:45px 20px}
-        .no-data span{font-size:2.5rem;display:block;margin-bottom:10px}
-
-        .export-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-        .import-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;transition:all 0.3s;cursor:pointer}
-        .import-zone:hover{border-color:var(--primary);background:var(--primary-glow)}
-        .import-zone.dragover{border-color:var(--success);background:var(--success-glow)}
-
-        .report-row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
-        .report-row .field{flex:1;min-width:120px}
-
-        .empty-state{text-align:center;padding:45px 20px;border-radius:var(--radius);border:2px dashed var(--border)}
-        .empty-icon{width:72px;height:72px;margin:0 auto 14px;background:var(--primary-glow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;animation:float 3s ease-in-out infinite}
-        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-        .empty-title{font-size:1.2rem;font-weight:700;margin-bottom:6px}
-        .empty-sub{color:var(--text-muted);margin-bottom:18px}
-
-        .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120%);padding:12px 22px;border-radius:10px;z-index:10000;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.5);display:flex;align-items:center;gap:10px;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(10px)}
-        .toast.show{transform:translateX(-50%) translateY(0)}
-        .toast-success{background:rgba(34,197,94,0.92);color:white}
-        .toast-warning{background:rgba(245,158,11,0.92);color:white}
-        .toast-error{background:rgba(239,68,68,0.92);color:white}
-
-        /* CAPITAL BAR */
-        .capital-bar{display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(14,165,233,0.05),transparent);border:1px solid var(--border);border-radius:10px;flex-wrap:wrap}
-        .cap-item{display:flex;align-items:center;gap:10px;flex:1;min-width:150px}
-        .cap-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-        .cap-label{color:var(--text-muted);font-size:0.75rem;font-weight:500}
-        .cap-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700}
-        .cap-arrow{color:var(--text-muted);font-size:1.4rem;flex-shrink:0}
-        .cap-change-item{flex-direction:column;align-items:center;justify-content:center;min-width:100px;text-align:center}
-        .cap-change{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:700}
-        .cap-change-pct{font-family:'JetBrains Mono',monospace;font-size:0.85rem;font-weight:600;padding:2px 8px;border-radius:6px;margin-top:2px}
-        .cap-edit-box{background:rgba(14,165,233,0.05);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px}
-        .form-input{width:100%;padding:11px 12px;background:var(--bg-base);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;transition:border-color 0.3s}
-        .form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
-        @media(max-width:600px){.capital-bar{flex-direction:column;text-align:center}.cap-item{justify-content:center}.cap-arrow{transform:rotate(90deg)}}
-
-        .hidden{display:none!important}
-        @media(max-width:768px){.dashboard{grid-template-columns:repeat(2,1fr)}.ticker{flex-direction:column}.chart-footer{grid-template-columns:repeat(2,1fr)}.add-form{flex-direction:column}.add-form .field{min-width:100%}}
-    </style>
+<meta charset="UTF-8">
+<title>📌 سجل الأداء الاحترافي</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#00e676;--accent-dark:#00c853;--accent-glow:rgba(0,230,118,0.15);--red:#ff1744;--red-dark:#d50000;--red-glow:rgba(255,23,68,0.15);--gold:#ffd600;--gold-glow:rgba(255,214,0,0.12);--cyan:#00e5ff;--cyan-glow:rgba(0,229,255,0.12);--purple:#d500f9;--bg-base:#050a0e;--bg-card:rgba(10,18,28,0.85);--bg-elevated:rgba(18,30,45,0.9);--border:rgba(0,230,118,0.12);--border-hover:rgba(0,230,118,0.3);--text:#e8f5e9;--text-dim:#81c784;--text-muted:#4caf50;--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;color:var(--text);min-height:100vh;padding:16px;max-width:900px;margin:0 auto;line-height:1.6;background:var(--bg-base);background-image:radial-gradient(ellipse at 20% 0%,rgba(0,230,118,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(255,23,68,0.05) 0%,transparent 50%),radial-gradient(ellipse at 50% 50%,rgba(0,229,255,0.03) 0%,transparent 60%);background-attachment:fixed}
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300e676' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+body>*{position:relative;z-index:1}
+.header{text-align:center;padding:30px 20px;margin-bottom:20px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(255,23,68,0.06),rgba(0,229,255,0.05));border:1px solid var(--border);position:relative;overflow:hidden;backdrop-filter:blur(10px)}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--red),var(--accent))}
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.header h1{font-family:'Orbitron',sans-serif;font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,var(--accent) 0%,#fff 40%,var(--red) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;margin-bottom:4px}
+.header p{color:var(--text-dim);font-size:0.9rem;letter-spacing:1px}
+.ticker{display:flex;gap:12px;margin-bottom:20px}
+.ticker-item{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;height:52px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;backdrop-filter:blur(8px)}
+.ticker-item.plan{border-right:3px solid var(--accent)}
+.ticker-item.mot{border-right:3px solid var(--red)}
+.ticker-text{font-size:0.82rem;font-weight:600;opacity:0;transition:opacity 0.6s;position:absolute;padding:0 10px;text-align:center}
+.ticker-text.active{opacity:1}
+.ticker-text.t-plan{color:var(--accent)}
+.ticker-text.t-mot{color:var(--red)}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.dash-card{background:rgba(10,18,28,0.6);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden}
+.dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.dash-card.c-accent::before{background:var(--accent)}.dash-card.c-red::before{background:var(--red)}.dash-card.c-gold::before{background:var(--gold)}.dash-card.c-cyan::before{background:var(--cyan)}.dash-card.c-purple::before{background:var(--purple)}
+.dash-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
+.dash-icon{font-size:1.3rem;margin-bottom:4px}
+.dash-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;margin:4px 0}
+.dash-val.v-accent{color:var(--accent)}.dash-val.v-red{color:var(--red)}.dash-val.v-gold{color:var(--gold)}.dash-val.v-cyan{color:var(--cyan)}.dash-val.v-purple{color:var(--purple)}
+.dash-lbl{color:var(--text-muted);font-size:0.75rem;font-weight:500}
+.streak-box{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px}
+.streak-label{font-size:0.86rem;font-weight:600;color:var(--text-dim);white-space:nowrap}
+.streak-dots{display:flex;gap:4px;flex-wrap:wrap;flex:1;justify-content:center}
+.streak-dot{width:12px;height:12px;border-radius:50%}
+.streak-dot.win{background:var(--accent);box-shadow:0 0 8px rgba(0,230,118,0.5)}
+.streak-dot.lose{background:var(--red);box-shadow:0 0 8px rgba(255,23,68,0.4)}
+.streak-count{font-size:0.8rem;color:var(--text-muted);white-space:nowrap}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;backdrop-filter:blur(8px);transition:border-color 0.3s}
+.card:hover{border-color:var(--border-hover)}
+.card-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;cursor:pointer;background:linear-gradient(135deg,rgba(0,230,118,0.04),transparent);border-bottom:1px solid rgba(0,230,118,0.06);transition:background 0.3s}
+.card-hd:hover{background:rgba(0,230,118,0.06)}
+.card-hd h3{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.toggle{width:26px;height:26px;border-radius:50%;background:rgba(0,230,118,0.1);border:1px solid var(--border);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.75rem;transition:all 0.3s}
+.toggle:hover{background:var(--accent);color:var(--bg-base)}
+.card-bd{max-height:0;overflow:hidden;transition:max-height 0.5s ease,padding 0.3s;padding:0 20px}
+.card-bd.show{max-height:5000px;padding:20px}
+.capital-bar{display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(135deg,rgba(0,230,118,0.05),rgba(255,23,68,0.03));border:1px solid var(--border);border-radius:10px;flex-wrap:wrap}
+.cap-item{display:flex;align-items:center;gap:10px;flex:1;min-width:150px}
+.cap-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.cap-label{color:var(--text-muted);font-size:0.73rem;font-weight:500}
+.cap-val{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700}
+.cap-arrow{color:var(--text-muted);font-size:1.4rem;flex-shrink:0}
+.cap-change-item{flex-direction:column;align-items:center;justify-content:center;min-width:100px;text-align:center}
+.cap-change{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
+.cap-change-pct{font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:600;padding:2px 8px;border-radius:6px;margin-top:2px}
+.cap-edit-box{background:rgba(0,230,118,0.04);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px}
+.add-form{display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:18px;background:linear-gradient(135deg,rgba(0,230,118,0.04),rgba(0,229,255,0.03));border-radius:10px;border:1px solid var(--border)}
+.add-form .field{flex:1;min-width:130px}
+.add-form label{display:block;color:var(--text-dim);font-size:0.8rem;margin-bottom:5px;font-weight:500}
+.add-form input,.form-input{width:100%;padding:11px 12px;background:rgba(5,10,14,0.8);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;transition:border-color 0.3s}
+.add-form input:focus,.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.add-form input::placeholder{color:var(--text-muted);font-weight:400}
+input[type="date"]{color-scheme:dark}
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer}
+.btn{padding:10px 18px;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.25s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{transform:translateY(-1px)}
+.btn-accent{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#050a0e;font-weight:700}
+.btn-accent:hover{box-shadow:0 4px 20px rgba(0,230,118,0.4)}
+.btn-red{background:linear-gradient(135deg,var(--red),var(--red-dark));color:white}
+.btn-red:hover{box-shadow:0 4px 16px rgba(255,23,68,0.4)}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#0097a7);color:#050a0e;font-weight:700}
+.btn-cyan:hover{box-shadow:0 4px 16px rgba(0,229,255,0.4)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-dim)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.btn-sm{padding:6px 12px;font-size:0.78rem}
+.btn-xs{padding:4px 8px;font-size:0.72rem}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+.log-table{width:100%;border-collapse:collapse;font-size:0.9rem}
+.log-table th{background:var(--bg-elevated);padding:12px 14px;text-align:center;font-weight:600;font-size:0.82rem;color:var(--text-dim);border-bottom:2px solid var(--border)}
+.log-table td{padding:11px 14px;text-align:center;border-bottom:1px solid rgba(0,230,118,0.06)}
+.log-table tbody tr{background:transparent;transition:background 0.2s}
+.log-table tbody tr:hover{background:rgba(0,230,118,0.04)}
+.profit-cell{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:0.95rem}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700}
+.status-success{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(0,230,118,0.3)}
+.status-fail{background:var(--red-glow);color:var(--red);border:1px solid rgba(255,23,68,0.3)}
+.date-cell{font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--text-dim)}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-select{padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Tajawal',sans-serif;font-size:0.85rem;cursor:pointer}
+.filter-select:focus{outline:none;border-color:var(--accent)}
+.chart-box{background:linear-gradient(135deg,rgba(0,230,118,0.03),transparent);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.chart-title{font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:8px}
+.chart-legend{display:flex;gap:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:0.73rem;color:var(--text-muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+.chart-area{position:relative;height:300px;width:100%}
+.chart-footer{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.chart-stat{text-align:center;padding:8px;background:rgba(10,18,28,0.5);border-radius:8px}
+.chart-stat-val{font-family:'JetBrains Mono',monospace;font-size:0.95rem;font-weight:700;color:var(--accent)}
+.chart-stat-lbl{font-size:0.68rem;color:var(--text-muted);margin-top:2px}
+.no-data{text-align:center;color:var(--text-muted);padding:45px 20px}
+.no-data span{font-size:2.5rem;display:block;margin-bottom:10px}
+.export-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.import-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;transition:all 0.3s;cursor:pointer}
+.import-zone:hover{border-color:var(--accent);background:var(--accent-glow)}
+.import-zone.dragover{border-color:var(--accent);background:var(--accent-glow)}
+.report-row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.report-row .field{flex:1;min-width:120px}
+.empty-state{text-align:center;padding:45px 20px;border-radius:var(--radius);border:2px dashed var(--border)}
+.empty-icon{width:72px;height:72px;margin:0 auto 14px;background:var(--accent-glow);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.empty-title{font-size:1.2rem;font-weight:700;margin-bottom:6px}
+.empty-sub{color:var(--text-muted);margin-bottom:18px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120%);padding:12px 22px;border-radius:10px;z-index:10000;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.6);display:flex;align-items:center;gap:10px;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(12px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast-success{background:rgba(0,230,118,0.9);color:#050a0e}
+.toast-warning{background:rgba(255,214,0,0.9);color:#050a0e}
+.toast-error{background:rgba(255,23,68,0.9);color:white}
+.hidden{display:none!important}
+@media(max-width:768px){.dashboard{grid-template-columns:repeat(2,1fr)}.ticker{flex-direction:column}.chart-footer{grid-template-columns:repeat(2,1fr)}.add-form{flex-direction:column}.add-form .field{min-width:100%}}
+@media(max-width:600px){.capital-bar{flex-direction:column;text-align:center}.cap-item{justify-content:center}.cap-arrow{transform:rotate(90deg)}}
+</style>
 </head>
 <body>
-
 <div class="header">
-    <h1>📌 سجل الأداء الاحترافي</h1>
-    <p>سجل مبسّط – أدخل التاريخ والربح اليومي فقط</p>
+<h1>📌 سجل الأداء الاحترافي</h1>
+<p>سجل مبسّط – أدخل التاريخ والربح اليومي فقط</p>
 </div>
-
 <div class="ticker">
-    <div class="ticker-item plan"><div class="ticker-text t-plan" id="planText"></div></div>
-    <div class="ticker-item mot"><div class="ticker-text t-mot" id="motText"></div></div>
+<div class="ticker-item plan"><div class="ticker-text t-plan" id="planText"></div></div>
+<div class="ticker-item mot"><div class="ticker-text t-mot" id="motText"></div></div>
 </div>
-
-<!-- CAPITAL & BALANCE -->
 <div class="card">
-    <div class="card-hd" onclick="tog('capBody')">
-        <h3>💰 رأس المال والرصيد</h3>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="capBody">
-        <div class="capital-bar">
-            <div class="cap-item">
-                <div class="cap-icon" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark))">💵</div>
-                <div>
-                    <div class="cap-label">رأس المال الأساسي</div>
-                    <div class="cap-val" style="color:var(--primary)" id="capStart">$0</div>
-                </div>
-                <button class="btn btn-outline btn-xs" onclick="editCapital()" style="margin-right:auto">✏️</button>
-            </div>
-            <div class="cap-arrow">➜</div>
-            <div class="cap-item">
-                <div class="cap-icon" id="capCurrentIcon" style="background:linear-gradient(135deg,var(--success),var(--success-dark))">💰</div>
-                <div>
-                    <div class="cap-label">الرصيد الحالي</div>
-                    <div class="cap-val" id="capCurrent">$0</div>
-                </div>
-            </div>
-            <div class="cap-item cap-change-item">
-                <div class="cap-label">التغيير</div>
-                <div class="cap-change" id="capChange">$0</div>
-                <div class="cap-change-pct" id="capChangePct">0%</div>
-            </div>
-        </div>
-        <div id="capEditBox" class="cap-edit-box hidden">
-            <div class="add-form" style="margin:0">
-                <div class="field">
-                    <label>💵 رأس المال الأساسي</label>
-                    <input type="number" id="capInput" class="form-input" min="0" step="0.01">
-                </div>
-                <button class="btn btn-primary" onclick="saveCapital()" style="height:46px;white-space:nowrap">💾 حفظ</button>
-                <button class="btn btn-outline" onclick="cancelCapital()" style="height:46px">إلغاء</button>
-            </div>
-        </div>
-    </div>
+<div class="card-hd" onclick="tog('capBody')"><h3>💰 رأس المال والرصيد</h3><button class="toggle">▼</button></div>
+<div class="card-bd" id="capBody">
+<div class="capital-bar">
+<div class="cap-item"><div class="cap-icon" style="background:linear-gradient(135deg,var(--cyan),#0097a7)">💵</div><div><div class="cap-label">رأس المال الأساسي</div><div class="cap-val" style="color:var(--cyan)" id="capStart">$0</div></div><button class="btn btn-outline btn-xs" onclick="editCapital()" style="margin-right:auto">✏️</button></div>
+<div class="cap-arrow">➜</div>
+<div class="cap-item"><div class="cap-icon" id="capCurrentIcon" style="background:linear-gradient(135deg,var(--accent),var(--accent-dark))">💰</div><div><div class="cap-label">الرصيد الحالي</div><div class="cap-val" id="capCurrent">$0</div></div></div>
+<div class="cap-item cap-change-item"><div class="cap-label">التغيير</div><div class="cap-change" id="capChange">$0</div><div class="cap-change-pct" id="capChangePct">0%</div></div>
 </div>
-
-<!-- STATS -->
+<div id="capEditBox" class="cap-edit-box hidden">
+<div class="add-form" style="margin:0"><div class="field"><label>💵 رأس المال</label><input type="number" id="capInput" class="form-input" min="0" step="0.01"></div>
+<button class="btn btn-accent" onclick="saveCapital()" style="height:46px;white-space:nowrap">💾 حفظ</button><button class="btn btn-outline" onclick="cancelCapital()" style="height:46px">إلغاء</button></div>
+</div>
+</div>
+</div>
 <div class="card">
-    <div class="card-hd" onclick="tog('statsBody')">
-        <h3>📊 الإحصائيات</h3>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="statsBody">
-        <div class="dashboard">
-            <div class="dash-card c-primary"><div class="dash-icon">📅</div><div class="dash-val v-primary" id="dDays">0</div><div class="dash-lbl">أيام التداول</div></div>
-            <div class="dash-card c-success"><div class="dash-icon">✅</div><div class="dash-val v-success" id="dWin">0</div><div class="dash-lbl">أيام ناجحة</div></div>
-            <div class="dash-card c-danger"><div class="dash-icon">❌</div><div class="dash-val v-danger" id="dLose">0</div><div class="dash-lbl">أيام غير ناجحة</div></div>
-            <div class="dash-card c-purple"><div class="dash-icon">🎯</div><div class="dash-val v-purple" id="dRate">0%</div><div class="dash-lbl">نسبة الالتزام</div></div>
-            <div class="dash-card c-success"><div class="dash-icon">🏆</div><div class="dash-val v-success" id="dBest">$0</div><div class="dash-lbl">أعلى ربح يومي</div></div>
-            <div class="dash-card c-danger"><div class="dash-icon">📉</div><div class="dash-val v-danger" id="dWorst">$0</div><div class="dash-lbl">أكبر خسارة يومية</div></div>
-            <div class="dash-card c-warning"><div class="dash-icon">📊</div><div class="dash-val v-warning" id="dAvg">$0</div><div class="dash-lbl">متوسط الربح اليومي</div></div>
-            <div class="dash-card c-primary"><div class="dash-icon">💰</div><div class="dash-val v-primary" id="dTotal">$0</div><div class="dash-lbl">إجمالي الربح الكلي</div></div>
-        </div>
-        <div class="streak-box" style="margin-top:16px;margin-bottom:0">
-            <span class="streak-label">🔥 آخر 20 يوم</span>
-            <div class="streak-dots" id="streakDots"></div>
-            <span class="streak-count" id="streakCount"></span>
-        </div>
-    </div>
+<div class="card-hd" onclick="tog('statsBody')"><h3>📊 الإحصائيات</h3><button class="toggle">▼</button></div>
+<div class="card-bd" id="statsBody">
+<div class="dashboard">
+<div class="dash-card c-cyan"><div class="dash-icon">📅</div><div class="dash-val v-cyan" id="dDays">0</div><div class="dash-lbl">أيام التداول</div></div>
+<div class="dash-card c-accent"><div class="dash-icon">✅</div><div class="dash-val v-accent" id="dWin">0</div><div class="dash-lbl">أيام رابحة</div></div>
+<div class="dash-card c-red"><div class="dash-icon">❌</div><div class="dash-val v-red" id="dLose">0</div><div class="dash-lbl">أيام خاسرة</div></div>
+<div class="dash-card c-purple"><div class="dash-icon">🎯</div><div class="dash-val v-purple" id="dRate">0%</div><div class="dash-lbl">نسبة الأيام الرابحة</div></div>
+<div class="dash-card c-accent"><div class="dash-icon">🏆</div><div class="dash-val v-accent" id="dBest">$0</div><div class="dash-lbl">أعلى ربح يومي</div></div>
+<div class="dash-card c-red"><div class="dash-icon">📉</div><div class="dash-val v-red" id="dWorst">$0</div><div class="dash-lbl">أكبر خسارة يومية</div></div>
+<div class="dash-card c-gold"><div class="dash-icon">📊</div><div class="dash-val v-gold" id="dAvg">$0</div><div class="dash-lbl">متوسط الربح اليومي</div></div>
+<div class="dash-card c-cyan"><div class="dash-icon">💰</div><div class="dash-val v-cyan" id="dTotal">$0</div><div class="dash-lbl">إجمالي الربح الكلي</div></div>
 </div>
-
-<!-- ADD ENTRY -->
+<div class="streak-box"><span class="streak-label">🔥 آخر 20 يوم</span><div class="streak-dots" id="streakDots"></div><span class="streak-count" id="streakCount"></span></div>
+</div>
+</div>
 <div class="card">
-    <div class="card-hd" onclick="tog('addBody')">
-        <h3>➕ إضافة يوم تداول</h3>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="addBody">
-        <div class="add-form">
-            <div class="field">
-                <label>📅 التاريخ</label>
-                <input type="date" id="inDate">
-            </div>
-            <div class="field">
-                <label>💵 إجمالي الربح اليومي</label>
-                <input type="number" id="inProfit" step="0.01" placeholder="150 أو -60">
-            </div>
-            <button class="btn btn-success" onclick="addEntry()" style="height:46px;white-space:nowrap">✅ إضافة</button>
-        </div>
-        <div style="color:var(--text-muted);font-size:0.8rem;margin-top:10px">💡 ربح = رقم موجب | خسارة = رقم سالب | يوم ناجح = صافي ≥ $100</div>
-    </div>
+<div class="card-hd" onclick="tog('addBody')"><h3>➕ إضافة يوم تداول</h3><button class="toggle">▼</button></div>
+<div class="card-bd" id="addBody">
+<div class="add-form"><div class="field"><label>📅 التاريخ</label><input type="date" id="inDate"></div><div class="field"><label>💵 إجمالي الربح اليومي</label><input type="number" id="inProfit" step="0.01" placeholder="150 أو -60"></div><button class="btn btn-accent" onclick="addEntry()" style="height:46px;white-space:nowrap">✅ إضافة</button></div>
+<div style="color:var(--text-muted);font-size:0.8rem;margin-top:10px">💡 ربح = رقم موجب | خسارة = رقم سالب</div>
 </div>
-
-<!-- LOG -->
+</div>
 <div class="card">
-    <div class="card-hd" onclick="tog('logBody')">
-        <div style="display:flex;align-items:center;gap:10px">
-            <h3>📅 السجل اليومي</h3>
-            <span style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:3px 10px;border-radius:12px;font-size:0.73rem;font-weight:600" id="countBadge">0 يوم</span>
-        </div>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="logBody">
-        <div id="emptyState" class="empty-state">
-            <div class="empty-icon">📈</div>
-            <h3 class="empty-title">ابدأ رحلة التداول!</h3>
-            <p class="empty-sub">أضف أول يوم تداول من النموذج أعلاه</p>
-        </div>
-        <div id="logSection" class="hidden">
-            <div class="filter-bar">
-                <select id="fStatus" class="filter-select" onchange="render()">
-                    <option value="all">جميع الأيام</option>
-                    <option value="success">الأيام الناجحة</option>
-                    <option value="fail">غير الناجحة</option>
-                </select>
-                <input type="date" id="fFrom" class="filter-select" onchange="render()" style="font-family:'JetBrains Mono',monospace">
-                <input type="date" id="fTo" class="filter-select" onchange="render()" style="font-family:'JetBrains Mono',monospace">
-                <button class="btn btn-outline btn-sm" onclick="clearFilters()">مسح الفلتر</button>
-                <div style="flex:1"></div>
-                <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 مسح الكل</button>
-            </div>
-            <div class="table-wrap">
-                <table class="log-table" id="logTable">
-                    <thead><tr><th>التاريخ</th><th>إجمالي الربح اليومي</th><th>الحالة</th><th>إجراء</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<div class="card-hd" onclick="tog('logBody')"><div style="display:flex;align-items:center;gap:10px"><h3>📅 السجل اليومي</h3><span style="background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#050a0e;padding:3px 10px;border-radius:12px;font-size:0.73rem;font-weight:700" id="countBadge">0 يوم</span></div><button class="toggle">▼</button></div>
+<div class="card-bd" id="logBody">
+<div id="emptyState" class="empty-state"><div class="empty-icon">📈</div><h3 class="empty-title">ابدأ رحلة التداول!</h3><p class="empty-sub">أضف أول يوم تداول</p></div>
+<div id="logSection" class="hidden">
+<div class="filter-bar">
+<select id="fStatus" class="filter-select" onchange="render()"><option value="all">جميع الأيام</option><option value="success">الرابحة</option><option value="fail">الخاسرة</option></select>
+<input type="date" id="fFrom" class="filter-select" onchange="render()" style="font-family:'JetBrains Mono',monospace">
+<input type="date" id="fTo" class="filter-select" onchange="render()" style="font-family:'JetBrains Mono',monospace">
+<button class="btn btn-outline btn-sm" onclick="clearFilters()">مسح الفلتر</button><div style="flex:1"></div><button class="btn btn-red btn-sm" onclick="clearAll()">🗑 مسح الكل</button>
 </div>
-
-<!-- CHART -->
+<div class="table-wrap"><table class="log-table" id="logTable"><thead><tr><th>التاريخ</th><th>إجمالي الربح اليومي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody></tbody></table></div>
+</div>
+</div>
+</div>
 <div class="card">
-    <div class="card-hd" onclick="tog('chartBody')">
-        <h3>📊 منحنى الأداء اليومي</h3>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="chartBody">
-        <div class="chart-box">
-            <div class="chart-head">
-                <div class="chart-title">📈 الأداء اليومي</div>
-                <div class="chart-legend">
-                    <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div> ناجح</div>
-                    <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> غير ناجح</div>
-                    <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div> الهدف $100</div>
-                </div>
-            </div>
-            <div class="chart-area"><canvas id="dailyChart"></canvas></div>
-            <div class="no-data" id="chartNoData" style="display:none"><span>📊</span>أضف بيانات لمشاهدة الرسم البياني</div>
-            <div class="chart-footer" id="chartFooter" style="display:none">
-                <div class="chart-stat"><div class="chart-stat-val" id="cBest">$0</div><div class="chart-stat-lbl">أعلى ربح</div></div>
-                <div class="chart-stat"><div class="chart-stat-val" id="cWorst">$0</div><div class="chart-stat-lbl">أكبر خسارة</div></div>
-                <div class="chart-stat"><div class="chart-stat-val" id="cAvg">$0</div><div class="chart-stat-lbl">متوسط يومي</div></div>
-                <div class="chart-stat"><div class="chart-stat-val" id="cDays">0</div><div class="chart-stat-lbl">أيام التداول</div></div>
-            </div>
-        </div>
-    </div>
+<div class="card-hd" onclick="tog('chartBody')"><h3>📊 منحنى الأداء اليومي</h3><button class="toggle">▼</button></div>
+<div class="card-bd" id="chartBody">
+<div class="chart-box">
+<div class="chart-head"><div class="chart-title">📈 الأداء اليومي</div><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> ربح</div><div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> خسارة</div></div></div>
+<div class="chart-area"><canvas id="dailyChart"></canvas></div>
+<div class="no-data" id="chartNoData" style="display:none"><span>📊</span>أضف بيانات لمشاهدة الرسم</div>
+<div class="chart-footer" id="chartFooter" style="display:none">
+<div class="chart-stat"><div class="chart-stat-val" id="cBest">$0</div><div class="chart-stat-lbl">أعلى ربح</div></div>
+<div class="chart-stat"><div class="chart-stat-val" id="cWorst">$0</div><div class="chart-stat-lbl">أكبر خسارة</div></div>
+<div class="chart-stat"><div class="chart-stat-val" id="cAvg">$0</div><div class="chart-stat-lbl">متوسط يومي</div></div>
+<div class="chart-stat"><div class="chart-stat-val" id="cDays">0</div><div class="chart-stat-lbl">أيام التداول</div></div>
 </div>
-
-<!-- REPORTS -->
+</div>
+</div>
+</div>
 <div class="card">
-    <div class="card-hd" onclick="tog('reportBody')">
-        <h3>📄 التقارير</h3>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="reportBody">
-        <div class="report-row">
-            <div class="field">
-                <label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">نوع التقرير</label>
-                <select id="rType" class="filter-select" style="width:100%" onchange="updateReportFields()">
-                    <option value="all">الكل</option><option value="weekly">أسبوعي</option><option value="monthly">شهري</option><option value="custom">مخصص</option>
-                </select>
-            </div>
-            <div class="field hidden" id="rFromF">
-                <label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">من</label>
-                <input type="date" id="rFrom" class="filter-select" style="width:100%;font-family:'JetBrains Mono',monospace">
-            </div>
-            <div class="field hidden" id="rToF">
-                <label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">إلى</label>
-                <input type="date" id="rTo" class="filter-select" style="width:100%;font-family:'JetBrains Mono',monospace">
-            </div>
-            <button class="btn btn-primary" onclick="genPDF()" style="height:42px">📄 تقرير PDF</button>
-        </div>
-    </div>
+<div class="card-hd" onclick="tog('reportBody')"><h3>📄 التقارير</h3><button class="toggle">▼</button></div>
+<div class="card-bd" id="reportBody">
+<div class="report-row">
+<div class="field"><label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">نوع التقرير</label><select id="rType" class="filter-select" style="width:100%" onchange="updateReportFields()"><option value="all">الكل</option><option value="weekly">أسبوعي</option><option value="monthly">شهري</option><option value="custom">مخصص</option></select></div>
+<div class="field"><label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">لغة التقرير</label><select id="rLang" class="filter-select" style="width:100%"><option value="ar">عربي</option><option value="en">English</option></select></div>
+<div class="field hidden" id="rFromF"><label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">من</label><input type="date" id="rFrom" class="filter-select" style="width:100%;font-family:'JetBrains Mono',monospace"></div>
+<div class="field hidden" id="rToF"><label style="display:block;color:var(--text-dim);font-size:0.82rem;margin-bottom:5px">إلى</label><input type="date" id="rTo" class="filter-select" style="width:100%;font-family:'JetBrains Mono',monospace"></div>
+<button class="btn btn-cyan" onclick="genPDF()" style="height:42px">📄 تقرير PDF</button>
 </div>
-
-<!-- EXPORT/IMPORT -->
+</div>
+</div>
 <div class="card">
-    <div class="card-hd" onclick="tog('ioBody')">
-        <h3>📦 استيراد / تصدير</h3>
-        <button class="toggle">▼</button>
-    </div>
-    <div class="card-bd" id="ioBody">
-        <h4 style="margin-bottom:10px;font-size:0.92rem;color:var(--text-dim)">تصدير</h4>
-        <div class="export-grid">
-            <button class="btn btn-outline" onclick="expCSV()">📑 CSV</button>
-            <button class="btn btn-outline" onclick="expExcel()">📊 Excel</button>
-            <button class="btn btn-outline" onclick="genPDF()">📄 PDF</button>
-        </div>
-        <h4 style="margin:18px 0 10px;font-size:0.92rem;color:var(--text-dim)">استيراد</h4>
-        <div class="import-zone" id="importZone" onclick="document.getElementById('impFile').click()" ondragover="dOver(event)" ondragleave="dLeave(event)" ondrop="dDrop(event)">
-            <div style="font-size:1.8rem;margin-bottom:6px">📂</div>
-            <div style="font-weight:600">اسحب ملف CSV أو Excel هنا</div>
-            <div style="color:var(--text-muted);font-size:0.8rem;margin-top:4px">أو انقر للاختيار</div>
-        </div>
-        <input type="file" id="impFile" style="display:none" accept=".csv,.xlsx,.xls" onchange="impHandler(event)">
-    </div>
+<div class="card-hd" onclick="tog('ioBody')"><h3>📦 استيراد / تصدير</h3><button class="toggle">▼</button></div>
+<div class="card-bd" id="ioBody">
+<h4 style="margin-bottom:10px;font-size:0.92rem;color:var(--text-dim)">تصدير</h4>
+<div class="export-grid"><button class="btn btn-outline" onclick="expCSV()">📑 CSV</button><button class="btn btn-outline" onclick="expExcel()">📊 Excel</button><button class="btn btn-outline" onclick="genPDF()">📄 PDF</button></div>
+<h4 style="margin:18px 0 10px;font-size:0.92rem;color:var(--text-dim)">استيراد</h4>
+<div class="import-zone" onclick="document.getElementById('impFile').click()" ondragover="dOver(event)" ondragleave="dLeave(event)" ondrop="dDrop(event)"><div style="font-size:1.8rem;margin-bottom:6px">📂</div><div style="font-weight:600">اسحب ملف CSV أو Excel هنا</div><div style="color:var(--text-muted);font-size:0.8rem;margin-top:4px">أو انقر للاختيار</div></div>
+<input type="file" id="impFile" style="display:none" accept=".csv,.xlsx,.xls" onchange="impHandler(event)">
 </div>
-
+</div>
 <script>
-const GOAL=100, KEY='turkiJournalV2', CAP_KEY='turkiCapital';
-let entries=[];
-let capital=430;
-
-document.addEventListener('DOMContentLoaded',()=>{
-    load();
-    document.getElementById('inDate').value=new Date().toISOString().split('T')[0];
-    render();
-    startTicker();
-});
-
-function load(){
-    try{
-        const s=localStorage.getItem(KEY);
-        if(s)entries=JSON.parse(s);
-        const c=localStorage.getItem(CAP_KEY);
-        if(c)capital=parseFloat(c)||430;
-        // Migrate old data
-        if(!s){
-            const old=localStorage.getItem('turkiTradingData');
-            if(old){
-                const d=JSON.parse(old);
-                if(d.capital){capital=d.capital;localStorage.setItem(CAP_KEY,String(capital))}
-                if(d.trades&&d.trades.length){
-                    const days={};
-                    const comm=(d.commissionBuy||2.2885)+(d.commissionSell||2.2885);
-                    d.trades.forEach(t=>{
-                        if(!t.result||!t.date)return;
-                        if(!days[t.date])days[t.date]=0;
-                        const g=parseFloat(t.profitValue)||0;
-                        days[t.date]+=t.result==='ناجحة'?g-comm:-(g+comm);
-                    });
-                    Object.keys(days).forEach(date=>{
-                        entries.push({id:Date.now()+Math.random(),date,profit:Math.round(days[date]*100)/100});
-                    });
-                    save();
-                }
-            }
-        }
-    }catch(e){console.error(e)}
-}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(entries))}catch(e){toast('خطأ في الحفظ','error')}}
-
-function sorted(){return[...entries].sort((a,b)=>a.date.localeCompare(b.date))}
-function stats(data){
-    if(!data)data=sorted();
-    const n=data.length,w=data.filter(e=>e.profit>=GOAL).length,l=n-w;
-    const r=n?Math.round(w/n*100):0;
-    const ps=data.map(e=>e.profit);
-    const best=n?Math.max(...ps):0,worst=n?Math.min(...ps):0;
-    const total=Math.round(ps.reduce((a,b)=>a+b,0)*100)/100;
-    const avg=n?Math.round(total/n*100)/100:0;
-    return{n,w,l,r,best,worst,total,avg};
-}
-
-function render(){
-    const d=sorted(),s=stats(d);
-    // Capital
-    const currentBal=Math.round((capital+s.total)*100)/100;
-    const change=Math.round(s.total*100)/100;
-    const changePct=capital>0?Math.round((change/capital)*1000)/10:0;
-    document.getElementById('capStart').textContent='$'+capital;
-    document.getElementById('capCurrent').textContent='$'+currentBal;
-    document.getElementById('capCurrent').style.color=currentBal>=capital?'var(--success)':'var(--danger)';
-    const capIcon=document.getElementById('capCurrentIcon');
-    capIcon.style.background=currentBal>=capital?'linear-gradient(135deg,var(--success),var(--success-dark))':'linear-gradient(135deg,var(--danger),var(--danger-dark))';
-    const chEl=document.getElementById('capChange');
-    chEl.textContent=(change>=0?'+':'')+change+'$';
-    chEl.style.color=change>=0?'var(--success)':'var(--danger)';
-    const pctEl=document.getElementById('capChangePct');
-    pctEl.textContent=(changePct>=0?'+':'')+changePct+'%';
-    pctEl.style.color=changePct>=0?'var(--success)':'var(--danger)';
-    pctEl.style.background=changePct>=0?'var(--success-glow)':'var(--danger-glow)';
-    // Dashboard
-    document.getElementById('dDays').textContent=s.n;
-    document.getElementById('dWin').textContent=s.w;
-    document.getElementById('dLose').textContent=s.l;
-    document.getElementById('dRate').textContent=s.r+'%';
-    document.getElementById('dBest').textContent='$'+s.best;
-    document.getElementById('dWorst').textContent='$'+s.worst;
-    document.getElementById('dAvg').textContent='$'+s.avg;
-    document.getElementById('dTotal').textContent='$'+s.total;
-    document.getElementById('countBadge').textContent=s.n+' يوم';
-    document.getElementById('emptyState').classList.toggle('hidden',s.n>0);
-    document.getElementById('logSection').classList.toggle('hidden',s.n===0);
-    renderStreak(d);
-
-    let f=[...d];
-    const fs=document.getElementById('fStatus').value;
-    const ff=document.getElementById('fFrom').value;
-    const ft=document.getElementById('fTo').value;
-    if(fs==='success')f=f.filter(e=>e.profit>=GOAL);
-    else if(fs==='fail')f=f.filter(e=>e.profit<GOAL);
-    if(ff)f=f.filter(e=>e.date>=ff);
-    if(ft)f=f.filter(e=>e.date<=ft);
-
-    const tbody=document.querySelector('#logTable tbody');
-    tbody.innerHTML='';
-    [...f].reverse().forEach(e=>{
-        const ok=e.profit>=GOAL;
-        const tr=document.createElement('tr');
-        tr.innerHTML=`
-            <td class="date-cell">${e.date}</td>
-            <td class="profit-cell" style="color:${e.profit>=0?'var(--success)':'var(--danger)'}">${e.profit>=0?'+':''}${e.profit}$</td>
-            <td><span class="status-badge ${ok?'status-success':'status-fail'}">${ok?'ناجح ✅':'غير ناجح ❌'}</span></td>
-            <td><button class="btn btn-danger btn-xs" onclick="del(${e.id})">حذف</button></td>`;
-        tbody.appendChild(tr);
-    });
-    updateChart(d,s);
-}
-
-function renderStreak(d){
-    const dots=document.getElementById('streakDots'),cnt=document.getElementById('streakCount');
-    dots.innerHTML='';
-    const last=d.slice(-20);
-    if(!last.length){dots.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">لا توجد بيانات</span>';cnt.textContent='';return}
-    last.forEach(e=>{const x=document.createElement('div');x.className='streak-dot '+(e.profit>=GOAL?'win':'lose');x.title=e.date+': $'+e.profit;dots.appendChild(x)});
-    let streak=0;
-    for(let i=d.length-1;i>=0;i--){if(d[i].profit>=GOAL)streak++;else break}
-    cnt.textContent=streak>0?'🔥 سلسلة: '+streak+' يوم':'';
-}
-
-function addEntry(){
-    const date=document.getElementById('inDate').value;
-    const profit=parseFloat(document.getElementById('inProfit').value);
-    if(!date){toast('اختر التاريخ','warning');return}
-    if(isNaN(profit)){toast('أدخل الربح اليومي','warning');return}
-    if(entries.some(e=>e.date===date)){
-        if(!confirm('يوجد سجل لهذا التاريخ. استبدال؟'))return;
-        entries=entries.filter(e=>e.date!==date);
-    }
-    entries.push({id:Date.now(),date,profit:Math.round(profit*100)/100});
-    save();
-    document.getElementById('inProfit').value='';
-    const next=new Date(date);next.setDate(next.getDate()+1);
-    document.getElementById('inDate').value=next.toISOString().split('T')[0];
-    render();
-    toast('تم إضافة يوم '+date);
-}
-
+var KEY='turkiJournalV2',CAP_KEY='turkiCapital',entries=[],capital=1000;
+var planTexts=["📌 حدّد هدفك اليومي بوضوح… والتزم به مهما كانت المغريات","🎯 اليوم الناجح نتيجة خطة نُفذت بانضباط","🛡️ أوقف الخسارة عند أول إشارة ضعف… حماية رأس المال أولوية","📊 الانضباط المستمر يبني أرباحًا… الربح السريع يبني أخطاء","💰 إدارة المخاطر أهم من مطاردة الفرص","📘 ادخل الصفقة بخطة… واخرج منها بخطة","⚖️ لا تدخل صفقة بلا سبب واضح ومعيار محدد","📉 تقبل الخسارة الصغيرة… لتمنع الخسارة الكبيرة","🧮 كل صفقة محسوبة… لا مكان للعشوائية","🔒 التزم بحدودك اليومية… فالحدود تصنع الاستمرارية","📍 انتظر تأكيد الإشارة… ولا تستبق الحركة","📈 لا ترفع المخاطرة لتعويض خسارة","🧾 وثّق كل صفقة… فالمراجعة تصنع التطور","🛑 إذا تحقّق الهدف اليومي… توقف","🔄 لا تغيّر خطتك أثناء الصفقة","📆 التزم بعدد صفقات محدد يوميًا","📏 قِس أداءك بالخطة… لا بالمشاعر","🔍 ابحث عن الجودة… لا عن الكثرة","💡 الخطة الواضحة تقلل القرارات العاطفية","🏗️ الاستمرارية اليومية تبني نتائج سنوية"];
+var motTexts=["📈 التداول سباق طويل… والالتزام هو خط النهاية","💪 الانضباط يصنع المحترف… لا الاستراتيجية وحدها","🎯 ركّز على جودة التنفيذ… فالنتائج تتبع الأداء","🧠 احترافك يبدأ عندما تتحكم بعواطفك قبل صفقاتك","⏳ السوق لا يكافئ المتسرعين… بل يكرم الصبورين","🔥 أكبر خسارة ليست في المال… بل في فقدان الانضباط","🧭 التزامك بالخطة أهم من عدد الصفقات","🚀 التطور اليومي البسيط يصنع نتائج كبيرة","🏆 المحترف ينتظر فرصته… ولا يطارد السوق","🌱 الثبات النفسي هو رأس المال الحقيقي","⚡ القرار الهادئ أقوى من الاندفاع","🎓 كل خسارة درس… إن أحسنت قراءته","🧘 الهدوء أثناء التقلبات علامة احتراف","🔁 النجاح نتيجة تكرار سلوك صحيح","🧱 الثقة تُبنى بالانضباط لا بالحظ","🧩 لا تبحث عن صفقة مثالية… بل عن تنفيذ مثالي","🌊 دع السوق يتحرك… ولا تسبقه","🏹 الدقة أهم من السرعة","🛤️ التقدم البطيء الثابت أفضل من قفزة عشوائية","👑 السيطرة على النفس أعظم من السيطرة على السوق"];
+document.addEventListener('DOMContentLoaded',function(){load();document.getElementById('inDate').value=new Date().toISOString().split('T')[0];render();startTicker()});
+function load(){try{var s=localStorage.getItem(KEY);if(s)entries=JSON.parse(s);var c=localStorage.getItem(CAP_KEY);if(c)capital=parseFloat(c)||1000;if(!s){var old=localStorage.getItem('turkiTradingData');if(old){var d=JSON.parse(old);if(d.capital){capital=d.capital;localStorage.setItem(CAP_KEY,String(capital))}if(d.trades&&d.trades.length){var days={};var comm=(d.commissionBuy||2.2885)+(d.commissionSell||2.2885);d.trades.forEach(function(t){if(!t.result||!t.date)return;if(!days[t.date])days[t.date]=0;var g=parseFloat(t.profitValue)||0;days[t.date]+=t.result==='ناجحة'?g-comm:-(g+comm)});Object.keys(days).forEach(function(date){entries.push({id:Date.now()+Math.random(),date:date,profit:Math.round(days[date]*100)/100})});save()}}}}catch(e){console.error(e)}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(entries))}catch(e){toast('خطأ','error')}}
+function sorted(){return entries.slice().sort(function(a,b){return a.date.localeCompare(b.date)})}
+function stats(data){if(!data)data=sorted();var n=data.length,w=data.filter(function(e){return e.profit>0}).length,l=n-w;var r=n?Math.round(w/n*100):0;var ps=data.map(function(e){return e.profit});var best=n?Math.max.apply(null,ps):0,worst=n?Math.min.apply(null,ps):0;var total=Math.round(ps.reduce(function(a,b){return a+b},0)*100)/100;var avg=n?Math.round(total/n*100)/100:0;return{n:n,w:w,l:l,r:r,best:best,worst:worst,total:total,avg:avg}}
+function render(){var d=sorted(),s=stats(d);var currentBal=Math.round((capital+s.total)*100)/100;var change=Math.round(s.total*100)/100;var changePct=capital>0?Math.round((change/capital)*1000)/10:0;
+document.getElementById('capStart').textContent='$'+capital;document.getElementById('capCurrent').textContent='$'+currentBal;document.getElementById('capCurrent').style.color=currentBal>=capital?'var(--accent)':'var(--red)';
+document.getElementById('capCurrentIcon').style.background=currentBal>=capital?'linear-gradient(135deg,var(--accent),var(--accent-dark))':'linear-gradient(135deg,var(--red),var(--red-dark))';
+var chEl=document.getElementById('capChange');chEl.textContent=(change>=0?'+':'')+change+'$';chEl.style.color=change>=0?'var(--accent)':'var(--red)';
+var pctEl=document.getElementById('capChangePct');pctEl.textContent=(changePct>=0?'+':'')+changePct+'%';pctEl.style.color=changePct>=0?'var(--accent)':'var(--red)';pctEl.style.background=changePct>=0?'var(--accent-glow)':'var(--red-glow)';
+document.getElementById('dDays').textContent=s.n;document.getElementById('dWin').textContent=s.w;document.getElementById('dLose').textContent=s.l;document.getElementById('dRate').textContent=s.r+'%';
+document.getElementById('dBest').textContent='$'+s.best;document.getElementById('dWorst').textContent='$'+s.worst;document.getElementById('dAvg').textContent='$'+s.avg;document.getElementById('dTotal').textContent='$'+s.total;
+document.getElementById('countBadge').textContent=s.n+' يوم';document.getElementById('emptyState').classList.toggle('hidden',s.n>0);document.getElementById('logSection').classList.toggle('hidden',s.n===0);
+renderStreak(d);var f=d.slice();var fs=document.getElementById('fStatus').value,ff=document.getElementById('fFrom').value,ft=document.getElementById('fTo').value;
+if(fs==='success')f=f.filter(function(e){return e.profit>0});else if(fs==='fail')f=f.filter(function(e){return e.profit<=0});
+if(ff)f=f.filter(function(e){return e.date>=ff});if(ft)f=f.filter(function(e){return e.date<=ft});
+var tbody=document.querySelector('#logTable tbody');tbody.innerHTML='';
+f.slice().reverse().forEach(function(e){var ok=e.profit>0;var tr=document.createElement('tr');
+tr.innerHTML='<td class="date-cell">'+e.date+'</td><td class="profit-cell" style="color:'+(e.profit>=0?'var(--accent)':'var(--red)')+'">'+(e.profit>=0?'+':'')+e.profit+'$</td><td><span class="status-badge '+(ok?'status-success':'status-fail')+'">'+(ok?'ربح ✅':'خسارة ❌')+'</span></td><td><button class="btn btn-red btn-xs" onclick="del('+e.id+')">حذف</button></td>';
+tbody.appendChild(tr)});updateChart(d,s)}
+function renderStreak(d){var dots=document.getElementById('streakDots'),cnt=document.getElementById('streakCount');dots.innerHTML='';var last=d.slice(-20);if(!last.length){dots.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">لا توجد بيانات</span>';cnt.textContent='';return}
+last.forEach(function(e){var x=document.createElement('div');x.className='streak-dot '+(e.profit>0?'win':'lose');x.title=e.date+': $'+e.profit;dots.appendChild(x)});var streak=0;for(var i=d.length-1;i>=0;i--){if(d[i].profit>0)streak++;else break}cnt.textContent=streak>0?'🔥 سلسلة: '+streak+' يوم':''}
+function addEntry(){var date=document.getElementById('inDate').value;var profit=parseFloat(document.getElementById('inProfit').value);if(!date){toast('اختر التاريخ','warning');return}if(isNaN(profit)){toast('أدخل الربح','warning');return}
+if(entries.some(function(e){return e.date===date})){if(!confirm('يوجد سجل لهذا التاريخ. استبدال؟'))return;entries=entries.filter(function(e){return e.date!==date})}
+entries.push({id:Date.now(),date:date,profit:Math.round(profit*100)/100});save();document.getElementById('inProfit').value='';var next=new Date(date);next.setDate(next.getDate()+1);document.getElementById('inDate').value=next.toISOString().split('T')[0];render();toast('تم إضافة يوم '+date)}
 function editCapital(){document.getElementById('capEditBox').classList.remove('hidden');document.getElementById('capInput').value=capital;document.getElementById('capInput').focus()}
 function cancelCapital(){document.getElementById('capEditBox').classList.add('hidden')}
-function saveCapital(){
-    const v=parseFloat(document.getElementById('capInput').value);
-    if(isNaN(v)||v<0){toast('أدخل رقم صحيح','warning');return}
-    capital=v;localStorage.setItem(CAP_KEY,String(capital));
-    document.getElementById('capEditBox').classList.add('hidden');
-    render();toast('تم تحديث رأس المال');
-}
-
-function del(id){if(!confirm('حذف هذا اليوم؟'))return;entries=entries.filter(e=>e.id!==id);save();render();toast('تم الحذف')}
+function saveCapital(){var v=parseFloat(document.getElementById('capInput').value);if(isNaN(v)||v<0){toast('أدخل رقم صحيح','warning');return}capital=v;localStorage.setItem(CAP_KEY,String(capital));document.getElementById('capEditBox').classList.add('hidden');render();toast('تم تحديث رأس المال')}
+function del(id){if(!confirm('حذف؟'))return;entries=entries.filter(function(e){return e.id!==id});save();render();toast('تم الحذف')}
 function clearAll(){if(!confirm('مسح جميع البيانات؟'))return;entries=[];save();render();toast('تم مسح الكل')}
 function clearFilters(){document.getElementById('fStatus').value='all';document.getElementById('fFrom').value='';document.getElementById('fTo').value='';render()}
-
-// CHART
-let chart=null;
-function updateChart(d,s){
-    const cv=document.getElementById('dailyChart'),nd=document.getElementById('chartNoData'),ft=document.getElementById('chartFooter');
-    if(!d.length){cv.style.display='none';nd.style.display='block';ft.style.display='none';return}
-    cv.style.display='block';nd.style.display='none';ft.style.display='grid';
-    document.getElementById('cBest').textContent='$'+s.best;
-    document.getElementById('cWorst').textContent='$'+s.worst;
-    document.getElementById('cAvg').textContent='$'+s.avg;
-    document.getElementById('cDays').textContent=s.n;
-    if(chart)chart.destroy();
-    const colors=d.map(e=>e.profit>=GOAL?'#22c55e':'#ef4444');
-    chart=new Chart(cv,{
-        type:'bar',
-        data:{labels:d.map(e=>e.date),datasets:[
-            {label:'الربح',data:d.map(e=>e.profit),backgroundColor:colors.map(c=>c+'33'),borderColor:colors,borderWidth:2,borderRadius:6,barPercentage:0.7},
-            {label:'الهدف',data:d.map(()=>GOAL),type:'line',borderColor:'#0ea5e9',borderDash:[6,4],borderWidth:2,pointRadius:0,fill:false}
-        ]},
-        options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
-            plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,0.95)',titleColor:'#f1f5f9',bodyColor:'#94a3b8',borderColor:'#1e293b',borderWidth:1,padding:12,
-                callbacks:{label:ctx=>{if(ctx.datasetIndex===1)return'الهدف: $'+GOAL;const v=ctx.parsed.y;return'الصافي: '+(v>=0?'+':'')+v+'$'+(v>=GOAL?' ✅':' ❌')}}}},
-            scales:{x:{grid:{color:'rgba(30,41,59,0.3)',drawBorder:false},ticks:{font:{size:10,family:"'JetBrains Mono'"},maxRotation:45}},
-                y:{grid:{color:'rgba(30,41,59,0.3)',drawBorder:false},ticks:{callback:v=>'$'+v,font:{size:11}}}}}
-    });
-}
-
-function tog(id){const b=document.getElementById(id),t=b.previousElementSibling.querySelector('.toggle');b.classList.toggle('show');t.textContent=b.classList.contains('show')?'▲':'▼'}
-
-function startTicker(){
-    const ps=["📌 SPX فقط – هدف يومي $100","🎯 يوم ناجح = صافي ≥ $100","🛡️ وقف الخسارة عند أول ضعف","📊 الانضباط > الربح السريع"];
-    const ms=["📈 التداول ماراثون – الالتزام المفتاح","💪 الانضباط أهم من أي استراتيجية","🎯 ركز على العملية لا النتيجة","🧠 التحكم بالعواطف يميز المحترف","⏳ السوق يكافئ الصبورين"];
-    const pE=document.getElementById('planText'),mE=document.getElementById('motText');
-    let pi=0,mi=0;
-    pE.textContent=ps[0];pE.classList.add('active');
-    mE.textContent=ms[0];mE.classList.add('active');
-    setInterval(()=>{pE.classList.remove('active');setTimeout(()=>{pi=(pi+1)%ps.length;pE.textContent=ps[pi];pE.classList.add('active')},400)},5000);
-    setInterval(()=>{mE.classList.remove('active');setTimeout(()=>{mi=(mi+1)%ms.length;mE.textContent=ms[mi];mE.classList.add('active')},400)},7000);
-}
-
-// EXPORT
-function expData(){return sorted().map(e=>({'التاريخ':e.date,'إجمالي الربح اليومي':e.profit,'الحالة':e.profit>=GOAL?'ناجح':'غير ناجح'}))}
-function expCSV(){const d=expData();if(!d.length){toast('لا توجد بيانات','warning');return}const h=Object.keys(d[0]);let c='\uFEFF'+h.join(',')+'\n';d.forEach(r=>{c+=h.map(k=>r[k]).join(',')+'\n'});dlFile(c,'trading-journal.csv','text/csv;charset=utf-8');toast('تم تصدير CSV')}
-function expExcel(){const d=expData();if(!d.length){toast('لا توجد بيانات','warning');return}const ws=XLSX.utils.json_to_sheet(d);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'السجل');XLSX.writeFile(wb,'trading-journal.xlsx');toast('تم تصدير Excel')}
-function dlFile(c,n,t){const b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=n;a.click();URL.revokeObjectURL(u)}
-
-// IMPORT
+var chart=null;
+function updateChart(d,s){var cv=document.getElementById('dailyChart'),nd=document.getElementById('chartNoData'),ft=document.getElementById('chartFooter');if(!d.length){cv.style.display='none';nd.style.display='block';ft.style.display='none';return}
+cv.style.display='block';nd.style.display='none';ft.style.display='grid';document.getElementById('cBest').textContent='$'+s.best;document.getElementById('cWorst').textContent='$'+s.worst;document.getElementById('cAvg').textContent='$'+s.avg;document.getElementById('cDays').textContent=s.n;
+if(chart)chart.destroy();var colors=d.map(function(e){return e.profit>0?'#00e676':'#ff1744'});
+chart=new Chart(cv,{type:'bar',data:{labels:d.map(function(e){return e.date}),datasets:[{label:'P/L',data:d.map(function(e){return e.profit}),backgroundColor:colors.map(function(c){return c+'33'}),borderColor:colors,borderWidth:2,borderRadius:6,barPercentage:0.7}]},
+options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(10,18,28,0.95)',titleColor:'#e8f5e9',bodyColor:'#81c784',borderColor:'rgba(0,230,118,0.2)',borderWidth:1,padding:12,callbacks:{label:function(ctx){var v=ctx.parsed.y;return(v>=0?'+':'')+v+'$'}}}},
+scales:{x:{grid:{color:'rgba(0,230,118,0.06)',drawBorder:false},ticks:{color:'#4caf50',font:{size:10,family:"'JetBrains Mono'"},maxRotation:45}},y:{grid:{color:'rgba(0,230,118,0.06)',drawBorder:false},ticks:{color:'#4caf50',callback:function(v){return'$'+v},font:{size:11}}}}}})}
+function tog(id){var b=document.getElementById(id),t=b.previousElementSibling.querySelector('.toggle');b.classList.toggle('show');t.textContent=b.classList.contains('show')?'▲':'▼'}
+function startTicker(){var pE=document.getElementById('planText'),mE=document.getElementById('motText');var pi=0,mi=0;pE.textContent=planTexts[0];pE.classList.add('active');mE.textContent=motTexts[0];mE.classList.add('active');
+setInterval(function(){pE.classList.remove('active');setTimeout(function(){pi=(pi+1)%planTexts.length;pE.textContent=planTexts[pi];pE.classList.add('active')},400)},5000);
+setInterval(function(){mE.classList.remove('active');setTimeout(function(){mi=(mi+1)%motTexts.length;mE.textContent=motTexts[mi];mE.classList.add('active')},400)},7000)}
+function expData(){return sorted().map(function(e){return{'Date':e.date,'Daily Profit':e.profit,'Status':e.profit>0?'Win':'Loss'}})}
+function expCSV(){var d=expData();if(!d.length){toast('لا توجد بيانات','warning');return}var h=Object.keys(d[0]);var c='\uFEFF'+h.join(',')+'\n';d.forEach(function(r){c+=h.map(function(k){return r[k]}).join(',')+'\n'});dlFile(c,'trading-journal.csv','text/csv;charset=utf-8');toast('تم تصدير CSV')}
+function expExcel(){var d=expData();if(!d.length){toast('لا توجد بيانات','warning');return}var ws=XLSX.utils.json_to_sheet(d);var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Journal');XLSX.writeFile(wb,'trading-journal.xlsx');toast('تم تصدير Excel')}
+function dlFile(c,n,t){var b=new Blob([c],{type:t}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=n;a.click();URL.revokeObjectURL(u)}
 function dOver(e){e.preventDefault();e.currentTarget.classList.add('dragover')}
 function dLeave(e){e.currentTarget.classList.remove('dragover')}
 function dDrop(e){e.preventDefault();e.currentTarget.classList.remove('dragover');if(e.dataTransfer.files.length)procImp(e.dataTransfer.files[0])}
 function impHandler(e){if(e.target.files.length)procImp(e.target.files[0]);e.target.value=''}
-function procImp(file){
-    const ext=file.name.split('.').pop().toLowerCase();
-    if(ext==='csv'){const r=new FileReader();r.onload=e=>parseImp(e.target.result);r.readAsText(file)}
-    else if(['xlsx','xls'].includes(ext)){const r=new FileReader();r.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array'});parseImp(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]))};r.readAsArrayBuffer(file)}
-    else toast('CSV أو Excel فقط','error');
-}
-function parseImp(csv){
-    const lines=csv.trim().split('\n');if(lines.length<2){toast('فارغ','warning');return}
-    const h=lines[0].split(',').map(x=>x.trim().replace(/\uFEFF/g,''));
-    let added=0,skipped=0;const ex=new Set(entries.map(e=>e.date));
-    for(let i=1;i<lines.length;i++){
-        const v=lines[i].split(',').map(x=>x.trim());if(v.length<2)continue;
-        const di=h.findIndex(x=>x.includes('تاريخ')||x.toLowerCase().includes('date'));
-        const pi=h.findIndex(x=>x.includes('ربح')||x.toLowerCase().includes('profit'));
-        if(di===-1||pi===-1)continue;
-        const date=v[di],profit=parseFloat(v[pi])||0;
-        if(!date||!date.match(/\d{4}-\d{2}-\d{2}/))continue;
-        if(ex.has(date)){skipped++;continue}
-        entries.push({id:Date.now()+i,date,profit:Math.round(profit*100)/100});
-        ex.add(date);added++;
-    }
-    if(added>0){save();render();toast(`تم استيراد ${added} يوم`+(skipped?` (تخطي ${skipped} مكرر)`:''))}
-    else toast('لا توجد بيانات صالحة','warning');
-}
-
-// REPORT
-function updateReportFields(){const t=document.getElementById('rType').value;document.getElementById('rFromF').classList.toggle('hidden',t!=='custom');document.getElementById('rToF').classList.toggle('hidden',t!=='custom')}
+function procImp(file){var ext=file.name.split('.').pop().toLowerCase();if(ext==='csv'){var r=new FileReader();r.onload=function(e){parseImp(e.target.result)};r.readAsText(file)}else if(ext==='xlsx'||ext==='xls'){var r=new FileReader();r.onload=function(e){var wb=XLSX.read(e.target.result,{type:'array'});parseImp(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]))};r.readAsArrayBuffer(file)}else toast('CSV أو Excel فقط','error')}
+function parseImp(csv){var lines=csv.trim().split('\n');if(lines.length<2){toast('فارغ','warning');return}var h=lines[0].split(',').map(function(x){return x.trim().replace(/\uFEFF/g,'')});var added=0,skipped=0;var ex={};entries.forEach(function(e){ex[e.date]=true});
+for(var i=1;i<lines.length;i++){var v=lines[i].split(',').map(function(x){return x.trim()});if(v.length<2)continue;var di=h.findIndex(function(x){return x.indexOf('تاريخ')>-1||x.toLowerCase().indexOf('date')>-1});var pi=h.findIndex(function(x){return x.indexOf('ربح')>-1||x.toLowerCase().indexOf('profit')>-1});
+if(di===-1||pi===-1)continue;var date=v[di],profit=parseFloat(v[pi])||0;if(!date||!/\d{4}-\d{2}-\d{2}/.test(date))continue;if(ex[date]){skipped++;continue}entries.push({id:Date.now()+i,date:date,profit:Math.round(profit*100)/100});ex[date]=true;added++}
+if(added>0){save();render();toast('تم استيراد '+added+' يوم'+(skipped?' (تخطي '+skipped+' مكرر)':''))}else toast('لا توجد بيانات صالحة','warning')}
+function updateReportFields(){var t=document.getElementById('rType').value;document.getElementById('rFromF').classList.toggle('hidden',t!=='custom');document.getElementById('rToF').classList.toggle('hidden',t!=='custom')}
 function genPDF(){
-    const type=document.getElementById('rType').value;let d=sorted();let label='تقرير شامل';const now=new Date();
-    if(type==='weekly'){const f=new Date(now);f.setDate(f.getDate()-7);d=d.filter(e=>e.date>=f.toISOString().split('T')[0]);label='تقرير أسبوعي'}
-    else if(type==='monthly'){const f=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];d=d.filter(e=>e.date>=f);label='تقرير شهري'}
-    else if(type==='custom'){const f=document.getElementById('rFrom').value,t=document.getElementById('rTo').value;if(f)d=d.filter(e=>e.date>=f);if(t)d=d.filter(e=>e.date<=t);label='تقرير مخصص'}
-    if(!d.length){toast('لا توجد بيانات','warning');return}
-    const s=stats(d);const{jsPDF}=window.jspdf;const doc=new jsPDF('p','mm','a4');
-    doc.setFontSize(18);doc.setTextColor(14,165,233);doc.text('Trading Performance Journal',105,20,{align:'center'});
-    doc.setFontSize(11);doc.setTextColor(100);doc.text(label,105,28,{align:'center'});
-    let y=40;doc.setFontSize(10);doc.setTextColor(50);
-    [['Trading Days: '+s.n,'Successful: '+s.w],['Failed: '+s.l,'Goal Rate: '+s.r+'%'],['Total: $'+s.total,'Avg: $'+s.avg],['Best: $'+s.best,'Worst: $'+s.worst]].forEach(p=>{doc.text(p[0],20,y);doc.text(p[1],110,y);y+=7});
-    doc.autoTable({startY:y+5,head:[['Date','Daily Profit','Status']],body:d.map(e=>[e.date,'$'+e.profit,e.profit>=GOAL?'Success':'Fail']),theme:'grid',headStyles:{fillColor:[14,165,233],textColor:255,fontSize:9},bodyStyles:{fontSize:8},alternateRowStyles:{fillColor:[245,247,250]},
-        didParseCell:x=>{if(x.column.index===2&&x.section==='body'){x.cell.styles.textColor=x.cell.raw==='Success'?[34,197,94]:[239,68,68];x.cell.styles.fontStyle='bold'}}});
-    const cv=document.getElementById('dailyChart');
-    if(cv&&d.length>0){const fy=doc.autoTable.previous.finalY+10;if(fy<230){doc.addImage(cv.toDataURL('image/png'),'PNG',15,fy,180,50)}}
-    doc.save('trading-report.pdf');toast('تم إنشاء التقرير');
-}
-
-function toast(msg,type='success'){
-    document.querySelectorAll('.toast').forEach(t=>t.remove());
-    const el=document.createElement('div');el.className=`toast toast-${type}`;
-    el.innerHTML=`${type==='success'?'✅':type==='error'?'❌':'⚠️'}<span>${msg}</span>`;
-    document.body.appendChild(el);
-    requestAnimationFrame(()=>el.classList.add('show'));
-    setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),400)},3000);
-}
+var type=document.getElementById('rType').value;var lang=document.getElementById('rLang').value;var d=sorted();var now=new Date();
+var labelAr='تقرير شامل',labelEn='Full Report';
+if(type==='weekly'){var f=new Date(now);f.setDate(f.getDate()-7);d=d.filter(function(e){return e.date>=f.toISOString().split('T')[0]});labelAr='تقرير أسبوعي';labelEn='Weekly Report'}
+else if(type==='monthly'){var f=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];d=d.filter(function(e){return e.date>=f});labelAr='تقرير شهري';labelEn='Monthly Report'}
+else if(type==='custom'){var f=document.getElementById('rFrom').value,t=document.getElementById('rTo').value;if(f)d=d.filter(function(e){return e.date>=f});if(t)d=d.filter(function(e){return e.date<=t});labelAr='تقرير مخصص';labelEn='Custom Report'}
+if(!d.length){toast('لا توجد بيانات','warning');return}
+var s=stats(d);var jsPDF=window.jspdf.jsPDF;var doc=new jsPDF('p','mm','a4');
+var currentBal=Math.round((capital+s.total)*100)/100;
+var isAr=lang==='ar';
+doc.setFillColor(5,10,14);doc.rect(0,0,210,297,'F');
+doc.setFontSize(22);doc.setTextColor(0,230,118);
+doc.text(isAr?'سجل الأداء الاحترافي':'Trading Performance Journal',105,18,{align:'center'});
+doc.setFontSize(11);doc.setTextColor(150);
+doc.text(isAr?labelAr:labelEn,105,26,{align:'center'});
+doc.setDrawColor(0,230,118);doc.setLineWidth(0.5);doc.line(20,30,190,30);
+doc.setFontSize(10);doc.setTextColor(200,200,200);var y=38;
+var info=isAr?[
+['$'+capital+' :raas almaal','$'+currentBal+' :alraseed alhaali'],
+[(s.total>=0?'+':'')+s.total+'$ :altaghyeer',(capital>0?Math.round(s.total/capital*1000)/10:0)+'% :alnisba'],
+[s.n+' :ayaam altadawul',s.w+' :ayaam rabiha'],
+[s.l+' :ayaam khasira',s.r+'% :nisbat alribh'],
+['$'+s.total+' :ijmali alribh','$'+s.avg+' :mutawassit yaumi'],
+['$'+s.best+' :aala ribh','$'+s.worst+' :akbar khasara']
+]:[
+['Capital: $'+capital,'Current Balance: $'+currentBal],
+['Change: '+(s.total>=0?'+':'')+s.total+'$','Change %: '+(capital>0?Math.round(s.total/capital*1000)/10:0)+'%'],
+['Trading Days: '+s.n,'Winning Days: '+s.w],
+['Losing Days: '+s.l,'Win Rate: '+s.r+'%'],
+['Total P/L: $'+s.total,'Avg Daily: $'+s.avg],
+['Best Day: $'+s.best,'Worst Day: $'+s.worst]
+];
+info.forEach(function(p){doc.text(p[0],22,y);doc.text(p[1],112,y);y+=6});
+var head=isAr?[['altareekh','alribh alyaumi','alhala']]:[[' Date','Daily P/L','Status']];
+var body=d.map(function(e){
+var status=isAr?(e.profit>0?'ribh':'khasara'):(e.profit>0?'WIN':'LOSS');
+return[e.date,(e.profit>=0?'+':'')+e.profit+'$',status]});
+doc.autoTable({startY:y+4,head:head,body:body,theme:'grid',
+styles:{fontSize:8,cellPadding:3,textColor:[200,200,200],fillColor:[15,23,42],lineColor:[0,80,40],lineWidth:0.3},
+headStyles:{fillColor:[0,150,80],textColor:[255,255,255],fontSize:9,fontStyle:'bold'},
+alternateRowStyles:{fillColor:[10,18,28]},
+didParseCell:function(x){if(x.column.index===2&&x.section==='body'){var isWin=x.cell.raw==='WIN'||x.cell.raw==='ribh';x.cell.styles.textColor=isWin?[0,230,118]:[255,23,68];x.cell.styles.fontStyle='bold'}
+if(x.column.index===1&&x.section==='body'){var val=x.cell.raw;x.cell.styles.textColor=val.indexOf('-')===0?[255,23,68]:[0,230,118]}}});
+var cv=document.getElementById('dailyChart');if(cv&&d.length>0){var fy=doc.autoTable.previous.finalY+8;if(fy<220){doc.addImage(cv.toDataURL('image/png'),'PNG',15,fy,180,55)}}
+var pageCount=doc.internal.getNumberOfPages();for(var i=1;i<=pageCount;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(100);doc.text((isAr?'سجل الأداء الاحترافي':'Trading Performance Journal')+' - '+i+'/'+pageCount,105,290,{align:'center'})}
+doc.save('trading-report.pdf');toast('تم إنشاء التقرير')}
+function toast(msg,type){if(!type)type='success';var old=document.querySelectorAll('.toast');old.forEach(function(t){t.remove()});var el=document.createElement('div');el.className='toast toast-'+type;el.innerHTML=(type==='success'?'✅':type==='error'?'❌':'⚠️')+'<span>'+msg+'</span>';document.body.appendChild(el);requestAnimationFrame(function(){el.classList.add('show')});setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.remove()},400)},3000)}
 </script>
 </body>
 </html>
